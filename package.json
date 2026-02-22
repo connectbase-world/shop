@@ -1,0 +1,13 @@
+{
+  "name": "shop-monorepo",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm -F @shop/web dev",
+    "build": "pnpm -F @shop/web build",
+    "dev:shop": "pnpm -F @shop/web dev",
+    "build:shop": "pnpm -F @shop/web build",
+    "dev:admin": "pnpm -F admin dev",
+    "build:admin": "pnpm -F admin build",
+    "build:all": "pnpm -r build"
+  }
+}
