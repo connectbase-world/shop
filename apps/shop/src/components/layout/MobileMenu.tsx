@@ -1,5 +1,7 @@
 import { Link } from '@tanstack/react-router'
-import { X, LogOut, ClipboardList, Heart } from 'lucide-react'
+import { X, LogOut, ClipboardList, Heart, Globe } from 'lucide-react'
+import { useI18n } from '@/hooks/useI18n'
+import type { Locale } from '@/lib/i18n'
 
 type MobileMenuProps = {
   open: boolean
@@ -9,6 +11,8 @@ type MobileMenuProps = {
 }
 
 export function MobileMenu({ open, onClose, user, onLogout }: MobileMenuProps) {
+  const { t, locale, setLocale } = useI18n()
+
   if (!open) return null
 
   return (
@@ -18,7 +22,7 @@ export function MobileMenu({ open, onClose, user, onLogout }: MobileMenuProps) {
         <button
           className="self-end p-2 -mt-2 -mr-2"
           onClick={onClose}
-          aria-label="메뉴 닫기"
+          aria-label="Close"
         >
           <X className="w-5 h-5" />
         </button>
@@ -28,21 +32,21 @@ export function MobileMenu({ open, onClose, user, onLogout }: MobileMenuProps) {
             className="text-lg text-gray-900 font-medium"
             onClick={onClose}
           >
-            홈
+            {t.common.home}
           </Link>
           <Link
             to="/products"
             className="text-lg text-gray-900 font-medium"
             onClick={onClose}
           >
-            상품
+            {t.common.products}
           </Link>
           <Link
             to="/cart"
             className="text-lg text-gray-900 font-medium"
             onClick={onClose}
           >
-            장바구니
+            {t.common.cart}
           </Link>
           <Link
             to="/wishlist"
@@ -50,15 +54,23 @@ export function MobileMenu({ open, onClose, user, onLogout }: MobileMenuProps) {
             onClick={onClose}
           >
             <Heart className="w-5 h-5" />
-            위시리스트
+            {t.header.wishlist}
           </Link>
         </nav>
 
         <div className="mt-auto pt-6 border-t border-gray-100">
+          <button
+            onClick={() => setLocale(locale === 'ko' ? 'en' : 'ko' as Locale)}
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-4 transition-colors"
+          >
+            <Globe className="w-4 h-4" />
+            {locale === 'ko' ? 'English' : '한국어'}
+          </button>
+
           {user ? (
             <div className="flex flex-col gap-3">
               <p className="text-sm text-gray-500">
-                {user.nickname || '회원'}님
+                {user.nickname || (locale === 'ko' ? '회원' : 'Member')}
               </p>
               <Link
                 to="/mypage"
@@ -66,7 +78,7 @@ export function MobileMenu({ open, onClose, user, onLogout }: MobileMenuProps) {
                 onClick={onClose}
               >
                 <ClipboardList className="w-4 h-4" />
-                마이페이지
+                {t.common.mypage}
               </Link>
               <button
                 onClick={async () => {
@@ -76,7 +88,7 @@ export function MobileMenu({ open, onClose, user, onLogout }: MobileMenuProps) {
                 className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
               >
                 <LogOut className="w-4 h-4" />
-                로그아웃
+                {t.common.logout}
               </button>
             </div>
           ) : (
@@ -85,7 +97,7 @@ export function MobileMenu({ open, onClose, user, onLogout }: MobileMenuProps) {
               className="block text-center py-3 bg-black text-white text-sm rounded-md"
               onClick={onClose}
             >
-              로그인
+              {t.common.login}
             </Link>
           )}
         </div>

@@ -6,6 +6,9 @@ import { PRODUCTS_TABLE_ID, CATEGORIES, PRODUCTS_PER_PAGE } from '@/lib/constant
 import { ProductCard } from '@/components/ui/ProductCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { toProducts } from '@/lib/utils'
+import { useI18n } from '@/hooks/useI18n'
+import { getCategoryLabel } from '@/lib/i18n'
+import { getProductName, getProductDescription } from '@/lib/i18n/getLocalizedField'
 
 type ProductSearch = {
   category?: string
@@ -61,16 +64,18 @@ function ProductListPage() {
   const { products, total } = Route.useLoaderData()
   const { category, page, q } = Route.useSearch()
   const navigate = useNavigate()
+  const { t, locale } = useI18n()
   const currentPage = page || 1
   const [searchInput, setSearchInput] = useState(q || '')
 
-  // 클라이언트 사이드 검색 필터링
   const filtered = q
     ? products.filter((p) => {
         const keyword = q.toLowerCase()
+        const name = getProductName(p, locale)
+        const desc = getProductDescription(p, locale)
         return (
-          p.name.toLowerCase().includes(keyword) ||
-          p.description?.toLowerCase().includes(keyword)
+          name.toLowerCase().includes(keyword) ||
+          desc?.toLowerCase().includes(keyword)
         )
       })
     : products
@@ -101,9 +106,11 @@ function ProductListPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
       <div className="flex items-baseline justify-between mb-6">
-        <h1 className="text-2xl font-bold">상품</h1>
+        <h1 className="text-2xl font-bold">{t.common.products}</h1>
         {displayTotal > 0 && (
-          <span className="text-sm text-gray-500">{displayTotal}개의 상품</span>
+          <span className="text-sm text-gray-500">
+            {t.product.itemCount.replace('{count}', String(displayTotal))}
+          </span>
         )}
       </div>
 
@@ -115,7 +122,7 @@ function ProductListPage() {
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="상품명으로 검색"
+            placeholder={t.header.searchPlaceholder}
             className="w-full pl-10 pr-10 py-3 border border-gray-200 text-sm outline-none focus:border-black transition-colors"
           />
           {searchInput && (
@@ -148,7 +155,7 @@ function ProductListPage() {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {cat.label}
+              {getCategoryLabel(cat.key, t)}
             </Link>
           )
         })}
@@ -157,9 +164,9 @@ function ProductListPage() {
       {/* 검색 결과 안내 */}
       {q && (
         <div className="mb-6 flex items-center gap-2 text-sm text-gray-500">
-          <span>"{q}" 검색 결과</span>
+          <span>"{q}" {t.product.searchResults}</span>
           <button onClick={clearSearch} className="text-xs text-gray-400 hover:text-black underline">
-            초기화
+            {t.product.clearSearch}
           </button>
         </div>
       )}
@@ -184,15 +191,19 @@ function ProductListPage() {
                   })
                 }
               >
-                더 보기
+                {t.common.more}
               </button>
             </div>
           )}
         </>
       ) : (
         <EmptyState
-          title={q ? `"${q}" 검색 결과가 없습니다` : '상품이 없습니다'}
-          description={q ? '다른 검색어를 입력해보세요' : '다른 카테고리를 선택해보세요'}
+          title={q
+            ? t.product.noSearchResults.replace('{q}', q)
+            : t.product.noProducts}
+          description={q
+            ? t.product.tryDifferentSearch
+            : t.product.tryDifferentCategory}
         />
       )}
     </div>

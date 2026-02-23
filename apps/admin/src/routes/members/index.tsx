@@ -2,18 +2,19 @@ import { useState, useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   Search, X, Users, ShoppingBag, Star, Eye, ChevronDown, ChevronUp,
-  Ticket, Coins, Gift, Plus, Minus,
+  Ticket, Coins, Gift, Plus, Minus, Megaphone, Shield,
 } from 'lucide-react'
 import { cb } from '@/lib/connectbase'
 import {
   ORDERS_TABLE_ID, PROFILES_TABLE_ID, REVIEWS_TABLE_ID, MEMBERS_TABLE_ID,
   COUPONS_TABLE_ID, USER_COUPONS_TABLE_ID, MILEAGE_HISTORY_TABLE_ID,
+  INFLUENCERS_TABLE_ID, DEFAULT_COMMISSION_RATE,
 } from '@/lib/constants'
 import {
   toOrders, toProfiles, toReviews, toMemberRows, toCoupons, toUserCoupons,
-  toMileageHistories, getMileageBalance, formatPrice, formatDateTime, formatDiscount,
+  toMileageHistories, toInfluencers, getMileageBalance, formatPrice, formatDateTime, formatDiscount,
 } from '@/lib/utils'
-import type { Member, MemberRow, Order, Profile, Review, Coupon, UserCoupon, MileageHistory } from '@/lib/types'
+import type { Member, MemberRow, Order, Profile, Review, Coupon, UserCoupon, MileageHistory, Influencer } from '@/lib/types'
 
 const PROVIDER_LABEL: Record<string, string> = {
   google: 'Google',
@@ -30,7 +31,7 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
 
 export const Route = createFileRoute('/members/')({
   loader: async () => {
-    const [membersResult, ordersResult, profilesResult, reviewsResult, couponsResult, userCouponsResult, mileageResult] =
+    const [membersResult, ordersResult, profilesResult, reviewsResult, couponsResult, userCouponsResult, mileageResult, influencersResult] =
       await Promise.all([
         cb.database.getData(MEMBERS_TABLE_ID, { limit: 1000 }),
         cb.database.getData(ORDERS_TABLE_ID, { limit: 1000 }),
@@ -39,6 +40,7 @@ export const Route = createFileRoute('/members/')({
         cb.database.getData(COUPONS_TABLE_ID, { limit: 1000 }),
         cb.database.getData(USER_COUPONS_TABLE_ID, { limit: 1000 }),
         cb.database.getData(MILEAGE_HISTORY_TABLE_ID, { limit: 1000 }),
+        cb.database.getData(INFLUENCERS_TABLE_ID, { limit: 1000 }),
       ])
     const memberRows = toMemberRows(membersResult.data ?? [])
     const orders = toOrders(ordersResult.data ?? [])
@@ -47,7 +49,8 @@ export const Route = createFileRoute('/members/')({
     const coupons = toCoupons(couponsResult.data ?? [])
     const userCoupons = toUserCoupons(userCouponsResult.data ?? [])
     const mileageHistories = toMileageHistories(mileageResult.data ?? [])
-    return { memberRows, orders, profiles, reviews, coupons, userCoupons, mileageHistories }
+    const influencers = toInfluencers(influencersResult.data ?? [])
+    return { memberRows, orders, profiles, reviews, coupons, userCoupons, mileageHistories, influencers }
   },
   component: MembersPage,
 })
@@ -66,6 +69,7 @@ function buildMembers(
       memberId: m.member_id,
       nickname: m.nickname || '',
       provider: m.provider || '',
+      role: m.role || 'user',
       name: '',
       phone: '',
       address: '',
@@ -115,7 +119,7 @@ function buildMembers(
 type SortKey = 'nickname' | 'orderCount' | 'totalSpent' | 'createdAt'
 
 function MembersPage() {
-  const { memberRows, orders, profiles, reviews, coupons, userCoupons, mileageHistories } =
+  const { memberRows, orders, profiles, reviews, coupons, userCoupons, mileageHistories, influencers } =
     Route.useLoaderData()
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('createdAt')
@@ -124,6 +128,7 @@ function MembersPage() {
   const [localUserCoupons, setLocalUserCoupons] = useState(userCoupons)
   const [localMileageHistories, setLocalMileageHistories] = useState(mileageHistories)
   const [localCoupons, setLocalCoupons] = useState(coupons)
+  const [localInfluencers, setLocalInfluencers] = useState(influencers)
 
   const members = useMemo(
     () => buildMembers(memberRows, profiles, orders, reviews),
@@ -261,6 +266,7 @@ function MembersPage() {
                     회원 <SortIcon field="nickname" />
                   </button>
                 </th>
+                <th className="text-center px-4 py-3 font-medium text-gray-600">역할</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">가입 경로</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">
                   <button onClick={() => handleSort('orderCount')} className="hover:text-gray-900">
@@ -288,6 +294,17 @@ function MembersPage() {
                     <p className="font-medium">{member.nickname || member.name || '-'}</p>
                     {member.name && member.nickname && member.name !== member.nickname && (
                       <p className="text-[11px] text-gray-400">{member.name}</p>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {member.role !== 'user' && (
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                        member.role === 'super_admin'
+                          ? 'bg-purple-50 text-purple-700'
+                          : 'bg-blue-50 text-blue-700'
+                      }`}>
+                        {member.role === 'super_admin' ? '최고관리자' : '관리자'}
+                      </span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -328,12 +345,14 @@ function MembersPage() {
         <MemberDetailModal
           memberId={selectedMemberId}
           members={members}
+          memberRows={memberRows}
           orders={orders}
           reviews={reviews}
           profiles={profiles}
           coupons={localCoupons}
           userCoupons={localUserCoupons}
           mileageHistories={localMileageHistories}
+          influencers={localInfluencers}
           onCouponIssued={(newUc, updatedCoupon) => {
             setLocalUserCoupons((prev) => [...prev, newUc])
             setLocalCoupons((prev) =>
@@ -342,6 +361,9 @@ function MembersPage() {
           }}
           onMileageAdjusted={(newHistory) => {
             setLocalMileageHistories((prev) => [...prev, newHistory])
+          }}
+          onInfluencerAdded={(inf) => {
+            setLocalInfluencers((prev) => [...prev, inf])
           }}
           onClose={() => setSelectedMemberId(null)}
         />
@@ -352,29 +374,44 @@ function MembersPage() {
 
 type TabKey = 'orders' | 'reviews' | 'coupons' | 'mileage'
 
+function generateRefCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let code = 'INF_'
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)]
+  }
+  return code
+}
+
 function MemberDetailModal({
   memberId,
   members,
+  memberRows,
   orders,
   reviews,
   profiles,
   coupons,
   userCoupons,
   mileageHistories,
+  influencers,
   onCouponIssued,
   onMileageAdjusted,
+  onInfluencerAdded,
   onClose,
 }: {
   memberId: string
   members: Member[]
+  memberRows: MemberRow[]
   orders: Order[]
   reviews: Review[]
   profiles: Profile[]
   coupons: Coupon[]
   userCoupons: UserCoupon[]
   mileageHistories: MileageHistory[]
+  influencers: Influencer[]
   onCouponIssued: (uc: UserCoupon, coupon: Coupon) => void
   onMileageAdjusted: (history: MileageHistory) => void
+  onInfluencerAdded: (inf: Influencer) => void
   onClose: () => void
 }) {
   const member = members.find((m) => m.memberId === memberId)
@@ -394,6 +431,50 @@ function MemberDetailModal({
   const [tab, setTab] = useState<TabKey>('orders')
   const [showCouponIssue, setShowCouponIssue] = useState(false)
   const [showMileageAdjust, setShowMileageAdjust] = useState(false)
+  const [addingInfluencer, setAddingInfluencer] = useState(false)
+  const [changingRole, setChangingRole] = useState(false)
+
+  const existingInfluencer = influencers.find((inf) => inf.member_id === memberId)
+
+  const handleAddInfluencer = async () => {
+    if (!member) return
+    setAddingInfluencer(true)
+    try {
+      const refCode = generateRefCode()
+      const now = new Date().toISOString()
+      const result = await cb.database.createData(INFLUENCERS_TABLE_ID, {
+        data: {
+          member_id: memberId,
+          nickname: member.nickname || member.name || '',
+          ref_code: refCode,
+          status: 'approved',
+          commission_rate: DEFAULT_COMMISSION_RATE,
+          total_earned: 0,
+          total_settled: 0,
+          memo: '',
+          applied_at: now,
+          approved_at: now,
+        },
+      })
+      const newInf: Influencer = {
+        id: result.id,
+        member_id: memberId,
+        nickname: member.nickname || member.name || '',
+        ref_code: refCode,
+        status: 'approved',
+        commission_rate: DEFAULT_COMMISSION_RATE,
+        total_earned: 0,
+        total_settled: 0,
+        memo: '',
+        applied_at: now,
+        approved_at: now,
+      }
+      onInfluencerAdded(newInf)
+    } catch {
+      alert('인플루언서 등록에 실패했습니다.')
+    }
+    setAddingInfluencer(false)
+  }
 
   if (!member) return null
 
@@ -457,6 +538,94 @@ function MemberDetailModal({
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* 역할 관리 */}
+          <div className="border border-gray-200 rounded-md p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-purple-500" />
+                <span className="text-sm font-medium">관리자 역할</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
+                  member.role === 'super_admin'
+                    ? 'bg-purple-100 text-purple-700'
+                    : member.role === 'admin'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {member.role === 'super_admin' ? '최고관리자' : member.role === 'admin' ? '관리자' : '일반 회원'}
+                </span>
+                <select
+                  value={member.role}
+                  disabled={changingRole}
+                  onChange={async (e) => {
+                    const newRole = e.target.value as 'user' | 'admin' | 'super_admin'
+                    const row = memberRows.find((r) => r.member_id === memberId)
+                    if (!row) return
+                    setChangingRole(true)
+                    try {
+                      await cb.database.updateData(MEMBERS_TABLE_ID, row.id, {
+                        data: { role: newRole },
+                      })
+                      member.role = newRole
+                      row.role = newRole
+                    } catch {
+                      alert('역할 변경에 실패했습니다.')
+                    }
+                    setChangingRole(false)
+                  }}
+                  className="text-xs border border-gray-200 rounded px-2 py-1 outline-none focus:border-gray-400 bg-white disabled:opacity-50"
+                >
+                  <option value="user">일반 회원</option>
+                  <option value="admin">관리자</option>
+                  <option value="super_admin">최고관리자</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* 인플루언서 */}
+          <div className="border border-gray-200 rounded-md p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Megaphone className="w-4 h-4 text-orange-500" />
+                <span className="text-sm font-medium">인플루언서</span>
+              </div>
+              {existingInfluencer ? (
+                <div className="flex items-center gap-2">
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
+                    existingInfluencer.status === 'approved'
+                      ? 'bg-green-100 text-green-700'
+                      : existingInfluencer.status === 'pending'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-red-100 text-red-600'
+                  }`}>
+                    {existingInfluencer.status === 'approved' ? '활동중' : existingInfluencer.status === 'pending' ? '심사중' : '반려'}
+                  </span>
+                  {existingInfluencer.ref_code && (
+                    <code className="text-xs bg-gray-100 px-2 py-0.5 rounded font-mono">
+                      {existingInfluencer.ref_code}
+                    </code>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={handleAddInfluencer}
+                  disabled={addingInfluencer}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white text-xs rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
+                >
+                  <Megaphone className="w-3.5 h-3.5" />
+                  {addingInfluencer ? '등록 중...' : '인플루언서로 등록'}
+                </button>
+              )}
+            </div>
+            {existingInfluencer?.status === 'approved' && (
+              <p className="text-xs text-gray-400 mt-2">
+                커미션 비율: {Math.round(existingInfluencer.commission_rate * 100)}% · 누적 수익: {formatPrice(existingInfluencer.total_earned)}
+              </p>
+            )}
           </div>
 
           {/* 통계 */}

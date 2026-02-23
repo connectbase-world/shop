@@ -1,15 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ShoppingBag, Menu, User, LogOut, ClipboardList, Heart } from 'lucide-react'
+import { ShoppingBag, Menu, User, LogOut, ClipboardList, Heart, Globe } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { useAuth } from '@/hooks/useAuth'
 import { useWishlist } from '@/hooks/useWishlist'
+import { useI18n } from '@/hooks/useI18n'
 import { MobileMenu } from './MobileMenu'
+import type { Locale } from '@/lib/i18n'
 
 export function Header() {
   const { totalItems } = useCart()
   const { user, logout } = useAuth()
   const { count: wishlistCount } = useWishlist()
+  const { t, locale, setLocale } = useI18n()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -25,6 +28,10 @@ export function Header() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [userMenuOpen])
 
+  const toggleLocale = () => {
+    setLocale(locale === 'ko' ? 'en' : 'ko' as Locale)
+  }
+
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -39,19 +46,28 @@ export function Header() {
               activeProps={{ className: 'text-sm text-gray-900 font-medium' }}
               activeOptions={{ exact: true }}
             >
-              홈
+              {t.common.home}
             </Link>
             <Link
               to="/products"
               className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
               activeProps={{ className: 'text-sm text-gray-900 font-medium' }}
             >
-              상품
+              {t.common.products}
             </Link>
           </nav>
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={toggleLocale}
+            className="flex items-center gap-1 px-2 py-1.5 text-xs text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+            title={locale === 'ko' ? 'English' : '한국어'}
+          >
+            <Globe className="w-4 h-4" />
+            <span className="hidden sm:inline">{locale === 'ko' ? 'EN' : 'KO'}</span>
+          </button>
+
           <Link to="/wishlist" className="relative p-2 hidden md:block">
             <Heart className="w-5 h-5" />
             {wishlistCount > 0 && (
@@ -77,7 +93,7 @@ export function Header() {
               >
                 <User className="w-4 h-4" />
                 <span className="max-w-[80px] truncate">
-                  {user.nickname || '회원'}
+                  {user.nickname || (locale === 'ko' ? '회원' : 'Member')}
                 </span>
               </button>
               {userMenuOpen && (
@@ -88,7 +104,7 @@ export function Header() {
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     <ClipboardList className="w-4 h-4" />
-                    마이페이지
+                    {t.common.mypage}
                   </Link>
                   <button
                     onClick={async () => {
@@ -98,7 +114,7 @@ export function Header() {
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     <LogOut className="w-4 h-4" />
-                    로그아웃
+                    {t.common.logout}
                   </button>
                 </div>
               )}
@@ -108,14 +124,14 @@ export function Header() {
               to="/login"
               className="hidden md:inline-block px-4 py-1.5 text-sm border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
             >
-              로그인
+              {t.common.login}
             </Link>
           )}
 
           <button
             className="md:hidden p-2"
             onClick={() => setMobileOpen(true)}
-            aria-label="메뉴 열기"
+            aria-label="Menu"
           >
             <Menu className="w-5 h-5" />
           </button>

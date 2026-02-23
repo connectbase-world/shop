@@ -25,3 +25,4 @@ export const COMMISSIONS_TABLE_ID = 'c9ed7a77-fd3e-4def-9482-8f7a9da5a357'
 export const FREE_SHIPPING_THRESHOLD = 50000
 export const SHIPPING_FEE = 3000
 export const PRODUCTS_PER_PAGE = 12
+export const MAX_QUERY_LIMIT = 1000

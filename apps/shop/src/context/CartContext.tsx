@@ -42,6 +42,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
             : item,
         )
       }
+      const translations = product.translations
+        ? Object.fromEntries(
+            Object.entries(product.translations).map(([loc, t]) => [loc, { name: t?.name }]),
+          )
+        : undefined
       return [
         ...prev,
         {
@@ -51,6 +56,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           image: product.image,
           quantity,
           category: product.category,
+          translations,
         },
       ]
     })

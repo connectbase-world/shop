@@ -1,6 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { X } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
+import { useI18n } from '@/hooks/useI18n'
+import { getCartItemName } from '@/lib/i18n/getLocalizedField'
 import { QuantitySelector } from '@/components/ui/QuantitySelector'
 import type { CartItem as CartItemType } from '@/lib/types'
 
@@ -11,6 +13,8 @@ type CartItemProps = {
 }
 
 export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
+  const { t, locale } = useI18n()
+  const localizedName = getCartItemName(item, locale)
   return (
     <div className="flex gap-4 py-6 border-b border-gray-100">
       <Link
@@ -20,7 +24,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
       >
         <img
           src={item.image}
-          alt={item.name}
+          alt={localizedName}
           className="w-full h-full object-cover"
         />
       </Link>
@@ -32,12 +36,12 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
             params={{ productId: item.productId }}
             className="text-sm font-medium truncate hover:underline"
           >
-            {item.name}
+            {localizedName}
           </Link>
           <button
             className="shrink-0 p-1 text-gray-400 hover:text-gray-900 transition-colors"
             onClick={onRemove}
-            aria-label="삭제"
+            aria-label={t.common.delete}
           >
             <X className="w-4 h-4" />
           </button>

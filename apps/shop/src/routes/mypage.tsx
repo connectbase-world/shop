@@ -5,23 +5,26 @@ import { cb } from '@/lib/connectbase'
 import { ORDERS_TABLE_ID, PROFILES_TABLE_ID, COUPONS_TABLE_ID, USER_COUPONS_TABLE_ID, MILEAGE_HISTORY_TABLE_ID, INFLUENCERS_TABLE_ID, COMMISSIONS_TABLE_ID } from '@/lib/constants'
 import { toOrders, toCoupons, toUserCoupons, toMileageHistories, getMileageBalance, toInfluencers, toCommissions, formatPrice, formatDateTime, formatDiscount } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
+import { useI18n } from '@/hooks/useI18n'
 import type { Order, Profile, Coupon, UserCoupon, MileageHistory, Influencer, Commission } from '@/lib/types'
 
 export const Route = createFileRoute('/mypage')({
   component: MyPage,
 })
 
-const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  paid: { label: '결제완료', className: 'bg-blue-50 text-blue-700' },
-  preparing: { label: '준비중', className: 'bg-amber-50 text-amber-700' },
-  shipping: { label: '배송중', className: 'bg-purple-50 text-purple-700' },
-  delivered: { label: '배송완료', className: 'bg-green-50 text-green-700' },
-  cancelled: { label: '취소', className: 'bg-red-50 text-red-700' },
-  refunded: { label: '환불', className: 'bg-gray-100 text-gray-600' },
-}
-
-function getStatusBadge(status: string) {
-  return STATUS_MAP[status] || { label: status, className: 'bg-gray-100 text-gray-600' }
+function getStatusBadge(status: string, t: { orderStatus: Record<string, string> }) {
+  const classMap: Record<string, string> = {
+    paid: 'bg-blue-50 text-blue-700',
+    preparing: 'bg-amber-50 text-amber-700',
+    shipping: 'bg-purple-50 text-purple-700',
+    delivered: 'bg-green-50 text-green-700',
+    cancelled: 'bg-red-50 text-red-700',
+    refunded: 'bg-gray-100 text-gray-600',
+  }
+  return {
+    label: (t.orderStatus as Record<string, string>)[status] || status,
+    className: classMap[status] || 'bg-gray-100 text-gray-600',
+  }
 }
 
 // --- 프로필 편집 컴포넌트 ---
@@ -34,6 +37,7 @@ type ProfileFormData = {
 }
 
 function ProfileSection({ user }: { user: { memberId: string; nickname?: string } }) {
+  const { t } = useI18n()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
@@ -118,27 +122,27 @@ function ProfileSection({ user }: { user: { memberId: string; nickname?: string 
     return (
       <div className="border border-gray-100 rounded-sm p-5 mb-8">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold">내 정보</h2>
+          <h2 className="text-lg font-bold">{t.mypage.myInfo}</h2>
           <button
             onClick={() => setEditing(true)}
             className="flex items-center gap-1 text-xs text-gray-500 hover:text-black transition-colors"
           >
             <Pencil className="w-3.5 h-3.5" />
-            {hasProfile ? '수정' : '등록'}
+            {hasProfile ? t.common.edit : t.mypage.register}
           </button>
         </div>
         {hasProfile ? (
           <div className="text-sm flex flex-col gap-1.5">
             <div className="flex gap-3">
-              <span className="text-gray-400 w-16 shrink-0">이름</span>
+              <span className="text-gray-400 w-16 shrink-0">{t.checkout.name}</span>
               <span>{profile.name || '-'}</span>
             </div>
             <div className="flex gap-3">
-              <span className="text-gray-400 w-16 shrink-0">연락처</span>
+              <span className="text-gray-400 w-16 shrink-0">{t.checkout.phone}</span>
               <span>{profile.phone || '-'}</span>
             </div>
             <div className="flex gap-3">
-              <span className="text-gray-400 w-16 shrink-0">주소</span>
+              <span className="text-gray-400 w-16 shrink-0">{t.checkout.address}</span>
               <span>
                 {profile.address || '-'}
                 {profile.address_detail ? ` ${profile.address_detail}` : ''}
@@ -147,7 +151,7 @@ function ProfileSection({ user }: { user: { memberId: string; nickname?: string 
           </div>
         ) : (
           <p className="text-sm text-gray-400">
-            배송 정보를 등록하면 주문 시 자동으로 입력됩니다.
+            {t.mypage.profileNotice}
           </p>
         )}
       </div>
@@ -156,45 +160,45 @@ function ProfileSection({ user }: { user: { memberId: string; nickname?: string 
 
   return (
     <div className="border border-gray-100 rounded-sm p-5 mb-8">
-      <h2 className="text-lg font-bold mb-4">내 정보 {hasProfile ? '수정' : '등록'}</h2>
+      <h2 className="text-lg font-bold mb-4">{t.mypage.myInfo} {hasProfile ? t.common.edit : t.mypage.register}</h2>
       <div className="flex flex-col gap-3">
         <div>
-          <label className="block text-xs text-gray-500 mb-1">이름</label>
+          <label className="block text-xs text-gray-500 mb-1">{t.checkout.name}</label>
           <input
             type="text"
             value={form.name}
             onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-            placeholder="홍길동"
+            placeholder={t.checkout.namePlaceholder}
             className="w-full px-3 py-2.5 border border-gray-200 text-sm outline-none focus:border-black transition-colors"
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">연락처</label>
+          <label className="block text-xs text-gray-500 mb-1">{t.checkout.phone}</label>
           <input
             type="tel"
             value={form.phone}
             onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-            placeholder="010-1234-5678"
+            placeholder={t.checkout.phonePlaceholder}
             className="w-full px-3 py-2.5 border border-gray-200 text-sm outline-none focus:border-black transition-colors"
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">주소</label>
+          <label className="block text-xs text-gray-500 mb-1">{t.checkout.address}</label>
           <input
             type="text"
             value={form.address}
             onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
-            placeholder="서울시 강남구 테헤란로 123"
+            placeholder={t.checkout.addressPlaceholder}
             className="w-full px-3 py-2.5 border border-gray-200 text-sm outline-none focus:border-black transition-colors"
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">상세주소</label>
+          <label className="block text-xs text-gray-500 mb-1">{t.checkout.addressDetail}</label>
           <input
             type="text"
             value={form.address_detail}
             onChange={(e) => setForm((p) => ({ ...p, address_detail: e.target.value }))}
-            placeholder="101동 1001호"
+            placeholder={t.checkout.addressDetailPlaceholder}
             className="w-full px-3 py-2.5 border border-gray-200 text-sm outline-none focus:border-black transition-colors"
           />
         </div>
@@ -206,14 +210,14 @@ function ProfileSection({ user }: { user: { memberId: string; nickname?: string 
           className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm hover:bg-gray-800 transition-colors disabled:opacity-50"
         >
           <Check className="w-3.5 h-3.5" />
-          {saving ? '저장 중...' : '저장'}
+          {saving ? t.mypage.saving : t.common.save}
         </button>
         <button
           onClick={handleCancel}
           className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 text-sm hover:bg-gray-50 transition-colors"
         >
           <X className="w-3.5 h-3.5" />
-          취소
+          {t.common.cancel}
         </button>
       </div>
     </div>
@@ -223,6 +227,7 @@ function ProfileSection({ user }: { user: { memberId: string; nickname?: string 
 // --- 내 쿠폰 ---
 
 function MyCouponsSection({ user }: { user: { memberId: string } }) {
+  const { t, locale } = useI18n()
   const [coupons, setCoupons] = useState<{ coupon: Coupon; userCoupon: UserCoupon }[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -270,14 +275,14 @@ function MyCouponsSection({ user }: { user: { memberId: string } }) {
     <div className="border border-gray-100 rounded-sm p-5 mb-8">
       <div className="flex items-center gap-2 mb-4">
         <Ticket className="w-4 h-4 text-gray-600" />
-        <h2 className="text-lg font-bold">내 쿠폰</h2>
+        <h2 className="text-lg font-bold">{t.mypage.myCoupons}</h2>
         {availableCount > 0 && (
           <span className="text-xs bg-black text-white px-2 py-0.5 rounded-full">{availableCount}</span>
         )}
       </div>
 
       {coupons.length === 0 ? (
-        <p className="text-sm text-gray-400">보유한 쿠폰이 없습니다</p>
+        <p className="text-sm text-gray-400">{t.mypage.noCoupons}</p>
       ) : (
         <div className="flex flex-col gap-2">
           {coupons.map(({ coupon, userCoupon }) => {
@@ -297,7 +302,7 @@ function MyCouponsSection({ user }: { user: { memberId: string } }) {
                     <p className="text-sm font-medium">{coupon.name}</p>
                     <p className="text-xs text-green-700 mt-0.5">{formatDiscount(coupon)}</p>
                     <p className="text-xs text-gray-400 mt-1">
-                      ~ {new Date(coupon.expires_at).toLocaleDateString('ko-KR')}
+                      ~ {new Date(coupon.expires_at).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-US')}
                     </p>
                   </div>
                   <span
@@ -309,7 +314,7 @@ function MyCouponsSection({ user }: { user: { memberId: string } }) {
                           : 'bg-red-50 text-red-600'
                     }`}
                   >
-                    {isExpired ? '만료' : userCoupon.status === 'used' ? '사용완료' : '사용가능'}
+                    {isExpired ? t.mypage.expired : userCoupon.status === 'used' ? t.mypage.used : t.mypage.available}
                   </span>
                 </div>
               </div>
@@ -324,6 +329,7 @@ function MyCouponsSection({ user }: { user: { memberId: string } }) {
 // --- 마일리지 ---
 
 function MileageSection({ user }: { user: { memberId: string } }) {
+  const { t } = useI18n()
   const [histories, setHistories] = useState<MileageHistory[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -357,18 +363,18 @@ function MileageSection({ user }: { user: { memberId: string } }) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Coins className="w-4 h-4 text-purple-600" />
-          <h2 className="text-lg font-bold">마일리지</h2>
+          <h2 className="text-lg font-bold">{t.mypage.mileage}</h2>
         </div>
         <span className="text-lg font-bold text-purple-700">{formatPrice(balance)}</span>
       </div>
 
       {histories.length === 0 ? (
-        <p className="text-sm text-gray-400">마일리지 내역이 없습니다</p>
+        <p className="text-sm text-gray-400">{t.mypage.noMileageHistory}</p>
       ) : (
         <div className="flex flex-col gap-2">
           {histories.slice(0, 10).map((h) => {
             const isPositive = h.amount > 0
-            const typeLabel = h.type === 'earn' ? '적립' : h.type === 'spend' ? '사용' : '조정'
+            const typeLabel = h.type === 'earn' ? t.mypage.earn : h.type === 'spend' ? t.mypage.spend : t.mypage.adjust
             const typeColor = h.type === 'earn'
               ? 'bg-green-50 text-green-700'
               : h.type === 'spend'
@@ -392,7 +398,7 @@ function MileageSection({ user }: { user: { memberId: string } }) {
             )
           })}
           {histories.length > 10 && (
-            <p className="text-xs text-gray-400 text-center pt-1">최근 10건만 표시됩니다</p>
+            <p className="text-xs text-gray-400 text-center pt-1">{t.mypage.recentOnly}</p>
           )}
         </div>
       )}
@@ -403,6 +409,7 @@ function MileageSection({ user }: { user: { memberId: string } }) {
 // --- 인플루언서 ---
 
 function InfluencerSection({ user }: { user: { memberId: string; nickname?: string } }) {
+  const { t } = useI18n()
   const [influencer, setInfluencer] = useState<Influencer | null>(null)
   const [commissions, setCommissions] = useState<Commission[]>([])
   const [loading, setLoading] = useState(true)
@@ -489,17 +496,17 @@ function InfluencerSection({ user }: { user: { memberId: string; nickname?: stri
       <div className="border border-gray-100 rounded-sm p-5 mb-8">
         <div className="flex items-center gap-2 mb-3">
           <Megaphone className="w-4 h-4 text-orange-500" />
-          <h2 className="text-lg font-bold">인플루언서</h2>
+          <h2 className="text-lg font-bold">{t.mypage.influencer}</h2>
         </div>
         <p className="text-sm text-gray-500 mb-4">
-          인플루언서로 활동하고 추천 링크를 통한 판매 수수료를 받아보세요.
+          {t.mypage.influencerDescription}
         </p>
         <button
           onClick={handleApply}
           disabled={applying}
           className="px-5 py-2.5 bg-black text-white text-sm hover:bg-gray-800 transition-colors disabled:opacity-50"
         >
-          {applying ? '신청 중...' : '인플루언서 신청하기'}
+          {applying ? t.mypage.applying : t.mypage.applyInfluencer}
         </button>
       </div>
     )
@@ -511,11 +518,11 @@ function InfluencerSection({ user }: { user: { memberId: string; nickname?: stri
       <div className="border border-gray-100 rounded-sm p-5 mb-8">
         <div className="flex items-center gap-2 mb-3">
           <Megaphone className="w-4 h-4 text-orange-500" />
-          <h2 className="text-lg font-bold">인플루언서</h2>
-          <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">심사중</span>
+          <h2 className="text-lg font-bold">{t.mypage.influencer}</h2>
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">{t.mypage.pendingReview}</span>
         </div>
         <p className="text-sm text-gray-500">
-          인플루언서 신청이 접수되었습니다. 관리자 승인을 기다려주세요.
+          {t.mypage.pendingMessage}
         </p>
       </div>
     )
@@ -527,19 +534,19 @@ function InfluencerSection({ user }: { user: { memberId: string; nickname?: stri
       <div className="border border-gray-100 rounded-sm p-5 mb-8">
         <div className="flex items-center gap-2 mb-3">
           <Megaphone className="w-4 h-4 text-orange-500" />
-          <h2 className="text-lg font-bold">인플루언서</h2>
-          <span className="text-[11px] px-2 py-0.5 rounded-full bg-red-50 text-red-600">반려</span>
+          <h2 className="text-lg font-bold">{t.mypage.influencer}</h2>
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-red-50 text-red-600">{t.mypage.rejected}</span>
         </div>
         <p className="text-sm text-gray-500 mb-4">
-          인플루언서 신청이 반려되었습니다.
-          {influencer.memo && <span className="block mt-1 text-red-500">사유: {influencer.memo}</span>}
+          {t.mypage.rejectedMessage}
+          {influencer.memo && <span className="block mt-1 text-red-500">{t.mypage.rejectedReason.replace('{reason}', influencer.memo)}</span>}
         </p>
         <button
           onClick={handleApply}
           disabled={applying}
           className="px-5 py-2.5 border border-gray-200 text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
         >
-          {applying ? '신청 중...' : '재신청하기'}
+          {applying ? t.mypage.applying : t.mypage.reapply}
         </button>
       </div>
     )
@@ -551,15 +558,15 @@ function InfluencerSection({ user }: { user: { memberId: string; nickname?: stri
     <div className="border border-gray-100 rounded-sm p-5 mb-8">
       <div className="flex items-center gap-2 mb-4">
         <Megaphone className="w-4 h-4 text-orange-500" />
-        <h2 className="text-lg font-bold">인플루언서</h2>
-        <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700">활동중</span>
+        <h2 className="text-lg font-bold">{t.mypage.influencer}</h2>
+        <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700">{t.mypage.active}</span>
       </div>
 
       {/* 추천 링크 */}
       <div className="bg-gray-50 rounded-sm p-3 mb-4">
         <div className="flex items-center gap-2 mb-1.5">
           <LinkIcon className="w-3.5 h-3.5 text-gray-500" />
-          <span className="text-xs text-gray-500">내 추천 링크</span>
+          <span className="text-xs text-gray-500">{t.mypage.myReferralLink}</span>
         </div>
         <div className="flex items-center gap-2">
           <code className="flex-1 text-xs bg-white border border-gray-200 rounded px-2.5 py-1.5 truncate">
@@ -570,7 +577,7 @@ function InfluencerSection({ user }: { user: { memberId: string; nickname?: stri
             className="shrink-0 flex items-center gap-1 px-3 py-1.5 bg-black text-white text-xs hover:bg-gray-800 transition-colors rounded"
           >
             <Copy className="w-3 h-3" />
-            {copied ? '복사됨!' : '복사'}
+            {copied ? t.common.copied : t.common.copy}
           </button>
         </div>
       </div>
@@ -579,38 +586,38 @@ function InfluencerSection({ user }: { user: { memberId: string; nickname?: stri
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="bg-gray-50 rounded-sm p-3 text-center">
           <p className="text-sm font-bold">{formatPrice(influencer.total_earned)}</p>
-          <p className="text-[11px] text-gray-500 mt-0.5">총 수익</p>
+          <p className="text-[11px] text-gray-500 mt-0.5">{t.mypage.totalEarned}</p>
         </div>
         <div className="bg-orange-50 rounded-sm p-3 text-center">
           <p className="text-sm font-bold text-orange-700">{formatPrice(pendingAmount)}</p>
-          <p className="text-[11px] text-gray-500 mt-0.5">미정산</p>
+          <p className="text-[11px] text-gray-500 mt-0.5">{t.mypage.unsettled}</p>
         </div>
         <div className="bg-gray-50 rounded-sm p-3 text-center">
           <p className="text-sm font-bold">{formatPrice(influencer.total_settled)}</p>
-          <p className="text-[11px] text-gray-500 mt-0.5">정산 완료</p>
+          <p className="text-[11px] text-gray-500 mt-0.5">{t.mypage.settled}</p>
         </div>
       </div>
 
       {/* 커미션 비율 */}
-      <p className="text-xs text-gray-400 mb-3">커미션 비율: {Math.round(influencer.commission_rate * 100)}%</p>
+      <p className="text-xs text-gray-400 mb-3">{t.mypage.commissionRate}: {Math.round(influencer.commission_rate * 100)}%</p>
 
       {/* 최근 커미션 내역 */}
       {commissions.length === 0 ? (
-        <p className="text-sm text-gray-400">아직 커미션 내역이 없습니다</p>
+        <p className="text-sm text-gray-400">{t.mypage.noCommissions}</p>
       ) : (
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-gray-500 font-medium">최근 커미션</p>
+          <p className="text-xs text-gray-500 font-medium">{t.mypage.recentCommissions}</p>
           {commissions.slice(0, 10).map((c) => (
             <div key={c.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
               <div className="flex items-center gap-2.5">
                 <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
                   c.status === 'settled' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
                 }`}>
-                  {c.status === 'settled' ? '정산완료' : '대기'}
+                  {c.status === 'settled' ? t.mypage.settledStatus : t.mypage.pendingStatus}
                 </span>
                 <div>
                   <p className="text-sm">
-                    {c.source === 'ref_link' ? '추천 링크' : '쿠폰 연동'} 커미션
+                    {c.source === 'ref_link' ? t.mypage.refLinkCommission : t.mypage.couponCommission}
                   </p>
                   <p className="text-[11px] text-gray-400">{formatDateTime(c.created_at)}</p>
                 </div>
@@ -619,7 +626,7 @@ function InfluencerSection({ user }: { user: { memberId: string; nickname?: stri
             </div>
           ))}
           {commissions.length > 10 && (
-            <p className="text-xs text-gray-400 text-center pt-1">최근 10건만 표시됩니다</p>
+            <p className="text-xs text-gray-400 text-center pt-1">{t.mypage.recentOnly}</p>
           )}
         </div>
       )}
@@ -631,9 +638,27 @@ function InfluencerSection({ user }: { user: { memberId: string; nickname?: stri
 
 function MyPage() {
   const { user, loading: authLoading } = useAuth()
+  const { t } = useI18n()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
+
+  const handleCancelOrder = async (order: Order) => {
+    if (!confirm(t.mypage.cancelConfirm)) return
+    setCancellingId(order.id)
+    try {
+      await cb.database.updateData(ORDERS_TABLE_ID, order.id, {
+        data: { status: 'cancelled' },
+      })
+      setOrders((prev) =>
+        prev.map((o) => (o.id === order.id ? { ...o, status: 'cancelled' } : o)),
+      )
+    } catch {
+      alert(t.mypage.cancelFailed)
+    }
+    setCancellingId(null)
+  }
 
   useEffect(() => {
     if (authLoading) return
@@ -666,16 +691,16 @@ function MyPage() {
     return (
       <div className="max-w-lg mx-auto px-4 py-20 text-center">
         <LogIn className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-        <h1 className="text-xl font-bold mb-2">로그인이 필요합니다</h1>
+        <h1 className="text-xl font-bold mb-2">{t.mypage.loginRequired}</h1>
         <p className="text-sm text-gray-500 mb-6">
-          마이페이지를 이용하려면 로그인해주세요.
+          {t.mypage.loginDescription}
         </p>
         <Link
           to="/login"
           search={{ redirect: '/mypage' }}
           className="inline-block px-8 py-3 bg-black text-white text-sm hover:bg-gray-800 transition-colors"
         >
-          로그인하기
+          {t.mypage.loginButton}
         </Link>
       </div>
     )
@@ -685,8 +710,8 @@ function MyPage() {
     <div className="max-w-3xl mx-auto px-4 py-10">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold">마이페이지</h1>
-          <p className="text-sm text-gray-500 mt-1">{user.nickname || '회원'}님, 안녕하세요</p>
+          <h1 className="text-2xl font-bold">{t.mypage.title}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t.mypage.greeting.replace('{name}', user.nickname || 'Member')}</p>
         </div>
       </div>
 
@@ -705,9 +730,9 @@ function MyPage() {
       {/* 주문 요약 */}
       <div className="grid grid-cols-3 gap-3 mb-8">
         {[
-          { label: '전체 주문', value: orders.length },
-          { label: '배송중', value: orders.filter((o) => o.status === 'shipping').length },
-          { label: '배송완료', value: orders.filter((o) => o.status === 'delivered').length },
+          { label: t.mypage.totalOrders, value: orders.length },
+          { label: t.mypage.shipping, value: orders.filter((o) => o.status === 'shipping').length },
+          { label: t.mypage.delivered, value: orders.filter((o) => o.status === 'delivered').length },
         ].map((stat) => (
           <div key={stat.label} className="bg-gray-50 rounded-sm px-4 py-3 text-center">
             <p className="text-lg font-bold">{stat.value}</p>
@@ -717,29 +742,29 @@ function MyPage() {
       </div>
 
       {/* 주문 내역 */}
-      <h2 className="text-lg font-bold mb-4">주문 내역</h2>
+      <h2 className="text-lg font-bold mb-4">{t.mypage.orders}</h2>
 
       {loading ? (
         <div className="py-12 text-center">
           <div className="w-8 h-8 border-2 border-gray-200 border-t-black rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-400">주문 내역을 불러오고 있습니다...</p>
+          <p className="text-sm text-gray-400">{t.mypage.loadingOrders}</p>
         </div>
       ) : orders.length === 0 ? (
         <div className="py-16 text-center">
           <Package className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-          <p className="text-gray-500 mb-4">주문 내역이 없습니다</p>
+          <p className="text-gray-500 mb-4">{t.mypage.noOrders}</p>
           <Link
             to="/products"
             className="inline-block px-6 py-2.5 bg-black text-white text-sm hover:bg-gray-800 transition-colors"
           >
-            쇼핑하러 가기
+            {t.cart.goShopping}
           </Link>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
           {orders.map((order) => {
             const expanded = expandedId === order.id
-            const statusInfo = getStatusBadge(order.status)
+            const statusInfo = getStatusBadge(order.status, t)
 
             return (
               <div key={order.id} className="border border-gray-100 rounded-sm overflow-hidden">
@@ -782,7 +807,7 @@ function MyPage() {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm truncate">{item.name}</p>
                             <p className="text-xs text-gray-500">
-                              {formatPrice(item.price)} × {item.quantity}
+                              {formatPrice(item.price)} x {item.quantity}
                             </p>
                           </div>
                           <p className="text-sm font-medium shrink-0">
@@ -794,28 +819,39 @@ function MyPage() {
 
                     <div className="border-t border-gray-100 pt-3 text-xs text-gray-500 flex flex-col gap-1.5">
                       <div className="flex gap-3">
-                        <span className="text-gray-400 w-14 shrink-0">주문번호</span>
+                        <span className="text-gray-400 w-14 shrink-0">{t.mypage.orderNumber}</span>
                         <span className="font-mono">{order.order_id}</span>
                       </div>
                       <div className="flex gap-3">
-                        <span className="text-gray-400 w-14 shrink-0">수령인</span>
+                        <span className="text-gray-400 w-14 shrink-0">{t.mypage.recipient}</span>
                         <span>{order.customer_name}</span>
                       </div>
                       <div className="flex gap-3">
-                        <span className="text-gray-400 w-14 shrink-0">연락처</span>
+                        <span className="text-gray-400 w-14 shrink-0">{t.mypage.phone}</span>
                         <span>{order.customer_phone}</span>
                       </div>
                       <div className="flex gap-3">
-                        <span className="text-gray-400 w-14 shrink-0">주소</span>
+                        <span className="text-gray-400 w-14 shrink-0">{t.checkout.address}</span>
                         <span>{order.address} {order.address_detail}</span>
                       </div>
                       {order.memo && (
                         <div className="flex gap-3">
-                          <span className="text-gray-400 w-14 shrink-0">메모</span>
+                          <span className="text-gray-400 w-14 shrink-0">{t.mypage.memo}</span>
                           <span>{order.memo}</span>
                         </div>
                       )}
                     </div>
+                    {order.status === 'paid' && (
+                      <div className="border-t border-gray-100 mt-3 pt-3">
+                        <button
+                          onClick={() => handleCancelOrder(order)}
+                          disabled={cancellingId === order.id}
+                          className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors"
+                        >
+                          {cancellingId === order.id ? t.mypage.cancelling : t.mypage.cancelOrder}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react'
-import { Plus, X, Upload, Loader2, ImageIcon, Images, FileImage } from 'lucide-react'
+import { Plus, X, Upload, Loader2, ImageIcon, Images, FileImage, Globe, ChevronDown } from 'lucide-react'
 import { cb } from '@/lib/connectbase'
-import { CATEGORIES, FILE_STORAGE_ID } from '@/lib/constants'
+import { CATEGORIES, FILE_STORAGE_ID, SUPPORTED_LANGUAGES } from '@/lib/constants'
+import type { SupportedLocale, ProductTranslation } from '@/lib/types'
 
 export type ProductFormData = {
   name: string
@@ -13,6 +14,7 @@ export type ProductFormData = {
   category: string
   is_featured: boolean
   stock: number
+  translations?: Partial<Record<SupportedLocale, ProductTranslation>>
 }
 
 type ProductFormProps = {
@@ -31,6 +33,7 @@ const defaultData: ProductFormData = {
   category: '상의',
   is_featured: false,
   stock: 0,
+  translations: undefined,
 }
 
 export function ProductForm({ initialData, onSubmit, submitLabel }: ProductFormProps) {
@@ -212,6 +215,33 @@ export function ProductForm({ initialData, onSubmit, submitLabel }: ProductFormP
             className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm outline-none focus:border-gray-400 transition-colors resize-none"
           />
         </div>
+
+        {/* 다국어 입력 */}
+        {SUPPORTED_LANGUAGES.length > 0 && (
+          <div className="border-t border-gray-200 pt-5">
+            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-3">
+              <Globe className="w-4 h-4 text-gray-400" />
+              다국어 입력 <span className="text-xs font-normal text-gray-400 ml-1">(선택)</span>
+            </label>
+            {SUPPORTED_LANGUAGES.map((lang) => (
+              <TranslationSection
+                key={lang.code}
+                langCode={lang.code}
+                langLabel={lang.label}
+                translation={form.translations?.[lang.code]}
+                onChange={(updated) => {
+                  setForm((prev) => ({
+                    ...prev,
+                    translations: {
+                      ...prev.translations,
+                      [lang.code]: updated,
+                    },
+                  }))
+                }}
+              />
+            ))}
+          </div>
+        )}
 
         <div>
           <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
@@ -412,5 +442,62 @@ export function ProductForm({ initialData, onSubmit, submitLabel }: ProductFormP
         </button>
       </div>
     </form>
+  )
+}
+
+function TranslationSection({
+  langCode,
+  langLabel,
+  translation,
+  onChange,
+}: {
+  langCode: string
+  langLabel: string
+  translation?: ProductTranslation
+  onChange: (updated: ProductTranslation) => void
+}) {
+  const [open, setOpen] = useState(!!translation?.name || !!translation?.description)
+  const hasContent = !!translation?.name || !!translation?.description
+
+  return (
+    <div className="mb-3 border border-gray-100 rounded-md overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-3 py-2.5 text-sm hover:bg-gray-50 transition-colors"
+      >
+        <span className="font-medium text-gray-700">{langLabel}</span>
+        <div className="flex items-center gap-2">
+          {hasContent && (
+            <span className="text-[11px] text-green-600 bg-green-50 px-1.5 py-0.5 rounded">입력됨</span>
+          )}
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </div>
+      </button>
+      {open && (
+        <div className="px-3 pb-3 flex flex-col gap-3 border-t border-gray-100 pt-3">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">상품명 ({langLabel})</label>
+            <input
+              type="text"
+              value={translation?.name || ''}
+              onChange={(e) => onChange({ ...translation, name: e.target.value })}
+              placeholder={`상품명을 ${langLabel}로 입력하세요`}
+              className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm outline-none focus:border-gray-400 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">상품 설명 ({langLabel})</label>
+            <textarea
+              value={translation?.description || ''}
+              onChange={(e) => onChange({ ...translation, description: e.target.value })}
+              placeholder={`상품 설명을 ${langLabel}로 입력하세요`}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm outline-none focus:border-gray-400 transition-colors resize-none"
+            />
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

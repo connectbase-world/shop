@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { Eye, Search, X, ChevronDown } from 'lucide-react'
 import { cb } from '@/lib/connectbase'
-import { ORDERS_TABLE_ID } from '@/lib/constants'
-import { toOrders, formatPrice, formatDateTime } from '@/lib/utils'
+import { ORDERS_TABLE_ID, PRODUCTS_TABLE_ID, COUPONS_TABLE_ID, USER_COUPONS_TABLE_ID, MILEAGE_HISTORY_TABLE_ID } from '@/lib/constants'
+import { toOrders, toProducts, toCoupons, toUserCoupons, toMileageHistories, getMileageBalance, formatPrice, formatDateTime } from '@/lib/utils'
 import type { Order } from '@/lib/types'
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -49,10 +49,108 @@ function OrderListPage() {
   const [dateTo, setDateTo] = useState('')
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
+    const order = orders.find((o) => o.id === orderId)
+    if (!order) return
+
+    if (newStatus === 'cancelled') {
+      if (!confirm('주문을 취소하시겠습니까? 재고, 쿠폰, 마일리지가 복원됩니다.')) return
+    }
+
     try {
       await cb.database.updateData(ORDERS_TABLE_ID, orderId, {
         data: { status: newStatus },
       })
+
+      // 취소 시 재고/쿠폰/마일리지 복원
+      if (newStatus === 'cancelled') {
+        // 재고 복원
+        try {
+          const stockResult = await cb.database.getData(PRODUCTS_TABLE_ID, { limit: 1000 })
+          const allProducts = toProducts(stockResult.data ?? [])
+          for (const item of order.items || []) {
+            const product = allProducts.find((p) => p.id === item.productId)
+            if (product) {
+              await cb.database.updateData(PRODUCTS_TABLE_ID, product.id, {
+                data: { stock: product.stock + item.quantity },
+              })
+            }
+          }
+        } catch { /* ignore */ }
+
+        // 쿠폰 복원
+        if (order.coupon_code && order.member_id) {
+          try {
+            const ucResult = await cb.database.getData(USER_COUPONS_TABLE_ID, { limit: 1000 })
+            const userCoupons = toUserCoupons(ucResult.data ?? [])
+            const usedCoupon = userCoupons.find(
+              (uc) => uc.member_id === order.member_id && uc.order_id === order.order_id && uc.status === 'used',
+            )
+            if (usedCoupon) {
+              await cb.database.updateData(USER_COUPONS_TABLE_ID, usedCoupon.id, {
+                data: { status: 'available', used_at: '', order_id: '' },
+              })
+            }
+            // used_count 감소
+            const couponsRes = await cb.database.getData(COUPONS_TABLE_ID, { limit: 1000 })
+            const coupons = toCoupons(couponsRes.data ?? [])
+            const coupon = coupons.find((c) => c.code === order.coupon_code)
+            if (coupon && coupon.used_count > 0) {
+              await cb.database.updateData(COUPONS_TABLE_ID, coupon.id, {
+                data: { used_count: coupon.used_count - 1 },
+              })
+            }
+          } catch { /* ignore */ }
+        }
+
+        // 마일리지 복원 (사용분 환불 + 적립분 회수)
+        if (order.member_id) {
+          try {
+            const mileageResult = await cb.database.getData(MILEAGE_HISTORY_TABLE_ID, { limit: 1000 })
+            const allHistories = toMileageHistories(mileageResult.data ?? [])
+            const myHistories = allHistories.filter((h) => h.member_id === order.member_id)
+            let currentBalance = getMileageBalance(myHistories)
+
+            // 해당 주문의 마일리지 기록 확인
+            const orderHistories = myHistories.filter((h) => h.order_id === order.order_id)
+            const spendRecord = orderHistories.find((h) => h.type === 'spend')
+            const earnRecord = orderHistories.find((h) => h.type === 'earn')
+
+            // 사용분 환불
+            if (spendRecord) {
+              const refundAmount = Math.abs(spendRecord.amount)
+              currentBalance += refundAmount
+              await cb.database.createData(MILEAGE_HISTORY_TABLE_ID, {
+                data: {
+                  member_id: order.member_id,
+                  type: 'adjust',
+                  amount: refundAmount,
+                  balance_after: currentBalance,
+                  description: '주문 취소 환불',
+                  order_id: order.order_id,
+                  created_at: new Date().toISOString(),
+                },
+              })
+            }
+
+            // 적립분 회수
+            if (earnRecord && earnRecord.amount > 0) {
+              currentBalance -= earnRecord.amount
+              await cb.database.createData(MILEAGE_HISTORY_TABLE_ID, {
+                data: {
+                  member_id: order.member_id,
+                  type: 'adjust',
+                  amount: -earnRecord.amount,
+                  balance_after: currentBalance,
+                  description: '주문 취소 적립금 회수',
+                  order_id: order.order_id,
+                  created_at: new Date().toISOString(),
+                },
+              })
+            }
+          } catch { /* ignore */ }
+        }
+      }
+
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)),
       )

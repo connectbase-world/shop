@@ -30,6 +30,7 @@ function EditProductPage() {
     category: product.category,
     is_featured: product.is_featured,
     stock: product.stock,
+    translations: product.translations,
   }
 
   const handleSubmit = async (data: ProductFormData) => {

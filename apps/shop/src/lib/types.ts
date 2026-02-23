@@ -1,3 +1,10 @@
+export type SupportedLocale = 'en'
+
+export type ProductTranslation = {
+  name?: string
+  description?: string
+}
+
 export type Product = {
   id: string
   name: string
@@ -10,6 +17,7 @@ export type Product = {
   is_featured: boolean
   stock: number
   created_at: string
+  translations?: Partial<Record<SupportedLocale, ProductTranslation>>
 }
 
 export type CartItem = {
@@ -19,6 +27,7 @@ export type CartItem = {
   image: string
   quantity: number
   category?: string
+  translations?: Partial<Record<SupportedLocale, { name?: string }>>
 }
 
 export type OrderInfo = {

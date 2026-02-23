@@ -1,3 +1,10 @@
+export type SupportedLocale = 'en'
+
+export type ProductTranslation = {
+  name?: string
+  description?: string
+}
+
 export type Product = {
   id: string
   name: string
@@ -10,6 +17,7 @@ export type Product = {
   is_featured: boolean
   stock: number
   created_at: string
+  translations?: Partial<Record<SupportedLocale, ProductTranslation>>
 }
 
 export type OrderItem = {
@@ -63,6 +71,7 @@ export type MemberRow = {
   member_id: string
   nickname: string
   provider: string
+  role: 'user' | 'admin' | 'super_admin'
   last_login: string
   created_at: string
 }
@@ -142,6 +151,7 @@ export type Member = {
   memberId: string
   nickname: string
   provider: string
+  role: 'user' | 'admin' | 'super_admin'
   name: string
   phone: string
   address: string

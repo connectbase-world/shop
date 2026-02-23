@@ -4,6 +4,7 @@ import { cb } from '@/lib/connectbase'
 import { PRODUCTS_TABLE_ID } from '@/lib/constants'
 import { toProducts } from '@/lib/utils'
 import { useWishlist } from '@/hooks/useWishlist'
+import { useI18n } from '@/hooks/useI18n'
 import { ProductCard } from '@/components/ui/ProductCard'
 import type { Product } from '@/lib/types'
 
@@ -19,6 +20,7 @@ export const Route = createFileRoute('/wishlist')({
 function WishlistPage() {
   const { products } = Route.useLoaderData()
   const { items: wishlistIds } = useWishlist()
+  const { t } = useI18n()
 
   const wishlistProducts: Product[] = wishlistIds
     .map((id) => products.find((p) => p.id === id))
@@ -26,18 +28,20 @@ function WishlistPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
-      <h1 className="text-2xl font-bold mb-2">위시리스트</h1>
-      <p className="text-sm text-gray-500 mb-8">{wishlistProducts.length}개의 상품</p>
+      <h1 className="text-2xl font-bold mb-2">{t.wishlist.title}</h1>
+      <p className="text-sm text-gray-500 mb-8">
+        {t.product.itemCount.replace('{count}', String(wishlistProducts.length))}
+      </p>
 
       {wishlistProducts.length === 0 ? (
         <div className="text-center py-20">
           <Heart className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-          <p className="text-gray-400 text-sm mb-4">위시리스트가 비어있습니다.</p>
+          <p className="text-gray-400 text-sm mb-4">{t.wishlist.empty}</p>
           <Link
             to="/products"
             className="inline-block px-6 py-2.5 bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors"
           >
-            상품 보러가기
+            {t.cart.goShopping}
           </Link>
         </div>
       ) : (

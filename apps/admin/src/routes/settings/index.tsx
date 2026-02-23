@@ -35,6 +35,22 @@ export const Route = createFileRoute('/settings/')({
 })
 
 function SettingsPage() {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">설정</h1>
+      </div>
+
+      <div className="flex flex-col gap-6">
+        <SeoSection />
+      </div>
+    </div>
+  )
+}
+
+/* ─── SEO 설정 ─── */
+
+function SeoSection() {
   const [pages, setPages] = useState<PageMeta[]>([])
   const [loading, setLoading] = useState(true)
   const [editingPage, setEditingPage] = useState<PageMeta | null>(null)
@@ -122,106 +138,97 @@ function SettingsPage() {
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">설정</h1>
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Globe className="w-5 h-5 text-gray-600" />
+          <h2 className="text-lg font-bold">페이지별 SEO 설정</h2>
+        </div>
+        <button
+          onClick={() => setEditingPage({ ...emptyMeta })}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          추가
+        </button>
       </div>
+      <p className="text-xs text-gray-500 mb-4">
+        Shop의 각 페이지에 SEO 메타 태그, OG 태그, 사이트맵 설정을 관리합니다.
+      </p>
 
       {message && (
-        <div
-          className={`mb-4 px-4 py-2.5 rounded-md text-sm ${
-            message.type === 'success'
-              ? 'bg-green-50 text-green-700 border border-green-200'
-              : 'bg-red-50 text-red-700 border border-red-200'
-          }`}
-        >
+        <div className={`mb-4 px-4 py-2.5 rounded-md text-sm ${
+          message.type === 'success'
+            ? 'bg-green-50 text-green-700 border border-green-200'
+            : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
           {message.text}
         </div>
       )}
 
-      {/* 페이지별 SEO */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Globe className="w-5 h-5 text-gray-600" />
-            <h2 className="text-lg font-bold">페이지별 SEO 설정</h2>
-          </div>
-          <button
-            onClick={() => setEditingPage({ ...emptyMeta })}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            추가
-          </button>
+      {loading ? (
+        <div className="flex items-center justify-center py-12 text-gray-400">
+          <Loader2 className="w-5 h-5 animate-spin mr-2" />
+          불러오는 중...
         </div>
-        <p className="text-xs text-gray-500 mb-4">
-          Shop의 각 페이지에 SEO 메타 태그, OG 태그, 사이트맵 설정을 관리합니다.
-        </p>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-12 text-gray-400">
-            <Loader2 className="w-5 h-5 animate-spin mr-2" />
-            불러오는 중...
-          </div>
-        ) : pages.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 text-sm">
-            등록된 페이지 SEO가 없습니다.
-          </div>
-        ) : (
-          <div className="border border-gray-200 rounded-md overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-4 py-2.5 font-medium text-gray-600">경로</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-gray-600">제목</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-gray-600">설명</th>
-                  <th className="text-center px-4 py-2.5 font-medium text-gray-600">사이트맵</th>
-                  <th className="text-center px-4 py-2.5 font-medium text-gray-600 w-20">액션</th>
+      ) : pages.length === 0 ? (
+        <div className="text-center py-12 text-gray-400 text-sm">
+          등록된 페이지 SEO가 없습니다.
+        </div>
+      ) : (
+        <div className="border border-gray-200 rounded-md overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-4 py-2.5 font-medium text-gray-600">경로</th>
+                <th className="text-left px-4 py-2.5 font-medium text-gray-600">제목</th>
+                <th className="text-left px-4 py-2.5 font-medium text-gray-600">설명</th>
+                <th className="text-center px-4 py-2.5 font-medium text-gray-600">사이트맵</th>
+                <th className="text-center px-4 py-2.5 font-medium text-gray-600 w-20">액션</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {pages.map((page) => (
+                <tr key={page.path} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-2.5 font-mono text-xs text-gray-600">{page.path}</td>
+                  <td className="px-4 py-2.5 max-w-[200px] truncate">{page.title || '-'}</td>
+                  <td className="px-4 py-2.5 max-w-[200px] truncate text-gray-500">
+                    {page.description || '-'}
+                  </td>
+                  <td className="px-4 py-2.5 text-center">
+                    <span
+                      className={`inline-block w-2 h-2 rounded-full ${
+                        page.include_in_sitemap ? 'bg-green-500' : 'bg-gray-300'
+                      }`}
+                    />
+                  </td>
+                  <td className="px-4 py-2.5 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => setEditingPage({ ...page })}
+                        className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(page.path)}
+                        disabled={deleting === page.path}
+                        className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                      >
+                        {deleting === page.path ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {pages.map((page) => (
-                  <tr key={page.path} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-2.5 font-mono text-xs text-gray-600">{page.path}</td>
-                    <td className="px-4 py-2.5 max-w-[200px] truncate">{page.title || '-'}</td>
-                    <td className="px-4 py-2.5 max-w-[200px] truncate text-gray-500">
-                      {page.description || '-'}
-                    </td>
-                    <td className="px-4 py-2.5 text-center">
-                      <span
-                        className={`inline-block w-2 h-2 rounded-full ${
-                          page.include_in_sitemap ? 'bg-green-500' : 'bg-gray-300'
-                        }`}
-                      />
-                    </td>
-                    <td className="px-4 py-2.5 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={() => setEditingPage({ ...page })}
-                          className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(page.path)}
-                          disabled={deleting === page.path}
-                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                        >
-                          {deleting === page.path ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* 편집 모달 */}
       {editingPage && (

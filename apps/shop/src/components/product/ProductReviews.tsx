@@ -4,6 +4,7 @@ import { cb } from '@/lib/connectbase'
 import { REVIEWS_TABLE_ID } from '@/lib/constants'
 import { toReviews } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
+import { useI18n } from '@/hooks/useI18n'
 import { Link } from '@tanstack/react-router'
 import type { Review } from '@/lib/types'
 
@@ -52,6 +53,7 @@ function StarRating({
 
 export function ProductReviews({ productId }: Props) {
   const { user } = useAuth()
+  const { t, locale } = useI18n()
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -85,7 +87,7 @@ export function ProductReviews({ productId }: Props) {
 
   const handleSubmit = async () => {
     if (!content.trim()) {
-      setError('리뷰 내용을 입력해주세요.')
+      setError(t.review.contentRequired)
       return
     }
     if (!user) return
@@ -98,7 +100,7 @@ export function ProductReviews({ productId }: Props) {
         data: {
           product_id: productId,
           member_id: user.memberId,
-          nickname: user.nickname || '회원',
+          nickname: user.nickname || t.review.defaultNickname,
           rating,
           content: content.trim(),
           created_at: new Date().toISOString(),
@@ -108,19 +110,19 @@ export function ProductReviews({ productId }: Props) {
       setRating(5)
       await loadReviews()
     } catch {
-      setError('리뷰 등록에 실패했습니다.')
+      setError(t.review.submitFailed)
     } finally {
       setSubmitting(false)
     }
   }
 
   const handleDelete = async (reviewId: string) => {
-    if (!confirm('리뷰를 삭제하시겠습니까?')) return
+    if (!confirm(t.review.deleteConfirm)) return
     try {
       await cb.database.deleteData(REVIEWS_TABLE_ID, reviewId)
       setReviews((prev) => prev.filter((r) => r.id !== reviewId))
     } catch {
-      alert('삭제에 실패했습니다.')
+      alert(t.review.deleteFailed)
     }
   }
 
@@ -132,7 +134,7 @@ export function ProductReviews({ productId }: Props) {
   return (
     <div>
       <h2 className="text-lg font-bold mb-6">
-        상품 리뷰 {reviews.length > 0 && <span className="text-gray-400 font-normal">({reviews.length})</span>}
+        {t.review.reviews} {reviews.length > 0 && <span className="text-gray-400 font-normal">({reviews.length})</span>}
       </h2>
 
       {/* 리뷰 요약 */}
@@ -141,7 +143,9 @@ export function ProductReviews({ productId }: Props) {
           <div className="text-center">
             <p className="text-4xl font-bold">{avgRating.toFixed(1)}</p>
             <StarRating rating={Math.round(avgRating)} />
-            <p className="text-xs text-gray-500 mt-1">{reviews.length}개 리뷰</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {t.review.reviewCount.replace('{count}', String(reviews.length))}
+            </p>
           </div>
           <div className="flex-1 flex flex-col gap-1.5">
             {ratingCounts.map(({ star, count }) => (
@@ -164,11 +168,11 @@ export function ProductReviews({ productId }: Props) {
       {/* 리뷰 작성 */}
       {user ? (
         <div className="mb-8 bg-gray-50 rounded-sm p-5">
-          <p className="text-sm font-medium mb-3">리뷰 작성</p>
+          <p className="text-sm font-medium mb-3">{t.review.writeReview}</p>
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-sm text-gray-500">별점</span>
+            <span className="text-sm text-gray-500">{t.review.ratingLabel}</span>
             <StarRating rating={rating} interactive onChange={setRating} size="md" />
-            <span className="text-sm text-gray-500">{rating}점</span>
+            <span className="text-sm text-gray-500">{t.review.ratingValue.replace('{rating}', String(rating))}</span>
           </div>
           <div className="flex gap-2">
             <input
@@ -176,7 +180,7 @@ export function ProductReviews({ productId }: Props) {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !submitting && handleSubmit()}
-              placeholder="상품에 대한 솔직한 리뷰를 남겨주세요"
+              placeholder={t.review.placeholder}
               className="flex-1 px-4 py-3 border border-gray-200 text-sm outline-none focus:border-black transition-colors"
               disabled={submitting}
             />
@@ -186,29 +190,29 @@ export function ProductReviews({ productId }: Props) {
               className="px-5 py-3 bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-1.5 shrink-0"
             >
               <Send className="w-4 h-4" />
-              등록
+              {t.review.submit}
             </button>
           </div>
           {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
         </div>
       ) : (
         <div className="mb-8 bg-gray-50 rounded-sm p-5 text-center">
-          <p className="text-sm text-gray-500 mb-2">리뷰를 작성하려면 로그인이 필요합니다.</p>
+          <p className="text-sm text-gray-500 mb-2">{t.review.loginRequired}</p>
           <Link
             to="/login"
             className="text-sm font-medium text-black hover:underline"
           >
-            로그인하기
+            {t.common.login}
           </Link>
         </div>
       )}
 
       {/* 리뷰 목록 */}
       {loading ? (
-        <div className="text-center py-10 text-gray-400 text-sm">리뷰를 불러오는 중...</div>
+        <div className="text-center py-10 text-gray-400 text-sm">{t.common.loading}</div>
       ) : reviews.length === 0 ? (
         <div className="text-center py-10 text-gray-400 text-sm">
-          아직 리뷰가 없습니다. 첫 번째 리뷰를 작성해보세요!
+          {t.review.noReviews} {t.review.beFirstReview}
         </div>
       ) : (
         <div className="divide-y divide-gray-100">
@@ -221,14 +225,14 @@ export function ProductReviews({ productId }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-400">
-                    {new Date(review.created_at).toLocaleDateString('ko-KR')}
+                    {new Date(review.created_at).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-US')}
                   </span>
                   {user?.memberId === review.member_id && (
                     <button
                       onClick={() => handleDelete(review.id)}
                       className="text-xs text-gray-400 hover:text-red-500 transition-colors"
                     >
-                      삭제
+                      {t.common.delete}
                     </button>
                   )}
                 </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { cb } from '@/lib/connectbase'
 import { useAuth } from '@/hooks/useAuth'
+import { useI18n } from '@/hooks/useI18n'
 import { registerMember } from '@/lib/registerMember'
 
 type LoginSearch = {
@@ -19,6 +20,7 @@ function LoginPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { redirect } = Route.useSearch()
+  const { t, locale } = useI18n()
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState('')
 
@@ -53,7 +55,7 @@ function LoginPage() {
         window.location.href = '/'
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '로그인에 실패했습니다.')
+      setError(err instanceof Error ? err.message : (locale === 'ko' ? '로그인에 실패했습니다.' : 'Login failed.'))
       setLoading(null)
     }
   }
@@ -61,8 +63,8 @@ function LoginPage() {
   return (
     <div className="max-w-sm mx-auto px-4 py-20">
       <div className="text-center mb-10">
-        <h1 className="text-2xl font-bold mb-2">로그인</h1>
-        <p className="text-sm text-gray-500">소셜 계정으로 간편하게 로그인하세요</p>
+        <h1 className="text-2xl font-bold mb-2">{t.auth.loginTitle}</h1>
+        <p className="text-sm text-gray-500">{t.auth.loginDescription}</p>
       </div>
 
       <div className="flex flex-col gap-3">
@@ -89,7 +91,7 @@ function LoginPage() {
               fill="#EA4335"
             />
           </svg>
-          {loading === 'google' ? '로그인 중...' : 'Google로 로그인'}
+          {loading === 'google' ? t.auth.processing : t.auth.googleLogin}
         </button>
 
         <button
@@ -100,7 +102,7 @@ function LoginPage() {
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="white">
             <path d="M16.273 12.845L7.376 0H0v24h7.727V11.155L16.624 24H24V0h-7.727v12.845z" />
           </svg>
-          {loading === 'naver' ? '로그인 중...' : '네이버로 로그인'}
+          {loading === 'naver' ? t.auth.processing : t.auth.naverLogin}
         </button>
       </div>
 
@@ -113,7 +115,7 @@ function LoginPage() {
           to="/"
           className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
         >
-          홈으로 돌아가기
+          {t.notFound.goHome}
         </Link>
       </div>
     </div>

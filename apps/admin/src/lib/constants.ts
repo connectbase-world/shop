@@ -12,6 +12,11 @@ export const MILEAGE_EARN_RATE = 0.03
 export const INFLUENCERS_TABLE_ID = 'dcbfe9fc-8661-4a45-bd55-6bb9cbfe5f30'
 export const COMMISSIONS_TABLE_ID = 'c9ed7a77-fd3e-4def-9482-8f7a9da5a357'
 export const DEFAULT_COMMISSION_RATE = 0.05
+export const MAX_QUERY_LIMIT = 1000
+
+export const SUPPORTED_LANGUAGES: { code: import('./types').SupportedLocale; label: string }[] = [
+  { code: 'en', label: 'English' },
+]
 
 export const CATEGORIES = [
   { key: 'all', label: '전체' },

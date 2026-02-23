@@ -18,6 +18,7 @@ import { Route as InfluencersIndexRouteImport } from './routes/influencers/index
 import { Route as CouponsIndexRouteImport } from './routes/coupons/index'
 import { Route as ProductsNewRouteImport } from './routes/products/new'
 import { Route as CouponsNewRouteImport } from './routes/coupons/new'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as ProductsProductIdEditRouteImport } from './routes/products/$productId.edit'
 import { Route as CouponsCouponIdEditRouteImport } from './routes/coupons/$couponId.edit'
 
@@ -66,6 +67,11 @@ const CouponsNewRoute = CouponsNewRouteImport.update({
   path: '/coupons/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsProductIdEditRoute = ProductsProductIdEditRouteImport.update({
   id: '/products/$productId/edit',
   path: '/products/$productId/edit',
@@ -79,6 +85,7 @@ const CouponsCouponIdEditRoute = CouponsCouponIdEditRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/coupons/new': typeof CouponsNewRoute
   '/products/new': typeof ProductsNewRoute
   '/coupons/': typeof CouponsIndexRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/coupons/new': typeof CouponsNewRoute
   '/products/new': typeof ProductsNewRoute
   '/coupons': typeof CouponsIndexRoute
@@ -106,6 +114,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/coupons/new': typeof CouponsNewRoute
   '/products/new': typeof ProductsNewRoute
   '/coupons/': typeof CouponsIndexRoute
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth/callback'
     | '/coupons/new'
     | '/products/new'
     | '/coupons/'
@@ -134,6 +144,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth/callback'
     | '/coupons/new'
     | '/products/new'
     | '/coupons'
@@ -147,6 +158,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/auth/callback'
     | '/coupons/new'
     | '/products/new'
     | '/coupons/'
@@ -161,6 +173,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   CouponsNewRoute: typeof CouponsNewRoute
   ProductsNewRoute: typeof ProductsNewRoute
   CouponsIndexRoute: typeof CouponsIndexRoute
@@ -238,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CouponsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/$productId/edit': {
       id: '/products/$productId/edit'
       path: '/products/$productId/edit'
@@ -257,6 +277,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   CouponsNewRoute: CouponsNewRoute,
   ProductsNewRoute: ProductsNewRoute,
   CouponsIndexRoute: CouponsIndexRoute,

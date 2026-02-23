@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { XCircle } from 'lucide-react'
+import { useI18n } from '@/hooks/useI18n'
 
 type PaymentFailSearch = {
   code?: string
@@ -16,20 +17,21 @@ export const Route = createFileRoute('/payment/fail')({
 
 function PaymentFailPage() {
   const { code, message } = Route.useSearch()
+  const { t } = useI18n()
 
   return (
     <div className="max-w-lg mx-auto px-4 py-20 text-center">
       <XCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
-      <h1 className="text-2xl font-bold mb-2">결제에 실패했습니다</h1>
+      <h1 className="text-2xl font-bold mb-2">{t.payment.failedTitle}</h1>
       {message && (
         <p className="text-sm text-gray-600 mb-1">{message}</p>
       )}
       {code && (
-        <p className="text-xs text-gray-400 mb-8">에러 코드: {code}</p>
+        <p className="text-xs text-gray-400 mb-8">{t.payment.errorCode.replace('{code}', code)}</p>
       )}
       {!code && !message && (
         <p className="text-sm text-gray-600 mb-8">
-          결제 처리 중 문제가 발생했습니다. 다시 시도해주세요.
+          {t.payment.failedDescription}
         </p>
       )}
       <div className="flex justify-center gap-4">
@@ -37,13 +39,13 @@ function PaymentFailPage() {
           to="/cart"
           className="inline-block px-8 py-3 bg-black text-white text-sm hover:bg-gray-800 transition-colors"
         >
-          다시 시도
+          {t.payment.retry}
         </Link>
         <Link
           to="/"
           className="inline-block px-8 py-3 border border-gray-200 text-sm hover:bg-gray-50 transition-colors"
         >
-          홈으로
+          {t.payment.goHome}
         </Link>
       </div>
     </div>
