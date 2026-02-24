@@ -3,14 +3,21 @@ import { X, LogOut, ClipboardList, Heart, Globe } from 'lucide-react'
 import { useI18n } from '@/hooks/useI18n'
 import type { Locale } from '@/lib/i18n'
 
+type ResolvedNav = {
+  slug: string
+  name: string
+  links: { label: string; to: string }[]
+}
+
 type MobileMenuProps = {
   open: boolean
   onClose: () => void
   user: { memberId: string; nickname?: string } | null
   onLogout: () => Promise<void>
+  resolvedNavs: ResolvedNav[]
 }
 
-export function MobileMenu({ open, onClose, user, onLogout }: MobileMenuProps) {
+export function MobileMenu({ open, onClose, user, onLogout, resolvedNavs }: MobileMenuProps) {
   const { t, locale, setLocale } = useI18n()
 
   if (!open) return null
@@ -41,6 +48,18 @@ export function MobileMenu({ open, onClose, user, onLogout }: MobileMenuProps) {
           >
             {t.common.products}
           </Link>
+          {resolvedNavs.flatMap((nav) =>
+            nav.links.map((link) => (
+              <Link
+                key={`${nav.slug}-${link.to}`}
+                to={link.to}
+                className="text-lg text-gray-900 font-medium"
+                onClick={onClose}
+              >
+                {link.label}
+              </Link>
+            )),
+          )}
           <Link
             to="/cart"
             className="text-lg text-gray-900 font-medium"

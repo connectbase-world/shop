@@ -302,6 +302,30 @@ const ko = {
     loginButton: '로그인 후 쿠폰 받기',
   },
 
+  // 게시판
+  boards: {
+    noPosts: '등록된 글이 없습니다',
+    views: '조회',
+    pinned: '고정',
+    writePost: '글쓰기',
+    loginToWrite: '글을 작성하려면 로그인이 필요합니다.',
+    postTitle: '제목',
+    postTitlePlaceholder: '제목을 입력하세요',
+    postContent: '내용',
+    postContentPlaceholder: '내용을 입력하세요',
+    supported: '문법을 지원합니다',
+    submitting: '등록 중...',
+    secretPost: '비밀글',
+    secretPostHidden: '비밀글입니다',
+    secretPostBlocked: '비밀글입니다',
+    secretPostBlockedDesc: '작성자만 확인할 수 있습니다.',
+  },
+
+  // 페이지
+  pages: {
+    noPages: '등록된 페이지가 없습니다',
+  },
+
   // 푸터
   footer: {
     companyInfo: '상호명: Shop | 대표: 홍길동',

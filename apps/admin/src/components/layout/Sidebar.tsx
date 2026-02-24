@@ -1,5 +1,5 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { LayoutDashboard, Package, ClipboardList, Users, Ticket, Megaphone, Settings, LogOut, User } from 'lucide-react'
+import { LayoutDashboard, Package, ClipboardList, Users, Ticket, Megaphone, FileText, StickyNote, Navigation, Settings, LogOut, User } from 'lucide-react'
 import { getAdminSession } from '@/lib/adminAuth'
 
 const navItems = [
@@ -9,6 +9,9 @@ const navItems = [
   { to: '/members', label: '회원 관리', icon: Users },
   { to: '/coupons', label: '쿠폰 관리', icon: Ticket },
   { to: '/influencers', label: '인플루언서', icon: Megaphone },
+  { to: '/boards', label: '게시판', icon: FileText },
+  { to: '/pages', label: '페이지', icon: StickyNote },
+  { to: '/navigations', label: '네비게이션', icon: Navigation },
 ] as const
 
 export function Sidebar({ onLogout, onNavigate }: { onLogout?: () => void; onNavigate?: () => void }) {

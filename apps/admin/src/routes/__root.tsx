@@ -72,7 +72,7 @@ function AdminLoginPage({ onLogin }: { onLogin: () => void }) {
       if (check.success) {
         onLogin()
       } else {
-        setError(check.error || '관리자 권한이 없습니다.')
+        setError(`${check.error} (ID: ${result.member_id})`)
       }
     } catch (e) {
       setError(`로그인 실패: ${e instanceof Error ? e.message : String(e)}`)

@@ -11,6 +11,9 @@ import ko from '@/lib/i18n/ko'
 import en from '@/lib/i18n/en'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { cb } from '@/lib/connectbase'
+import { BOARDS_TABLE_ID, PAGES_TABLE_ID, NAVIGATIONS_TABLE_ID, NAV_ITEMS_TABLE_ID } from '@/lib/constants'
+import { toBoards, toPages, toNavigations, toNavItems } from '@/lib/utils'
 
 function getT() {
   const locale = (typeof localStorage !== 'undefined' && localStorage.getItem('shop_locale')) || 'ko'
@@ -20,6 +23,39 @@ function getT() {
 import '../styles.css'
 
 export const Route = createRootRoute({
+  loader: async () => {
+    const [boardsRes, pagesRes, navsRes, navItemsRes] = await Promise.all([
+      cb.database.getData(BOARDS_TABLE_ID, { limit: 1000 }),
+      cb.database.getData(PAGES_TABLE_ID, { limit: 1000 }),
+      cb.database.getData(NAVIGATIONS_TABLE_ID, { limit: 1000 }),
+      cb.database.getData(NAV_ITEMS_TABLE_ID, { limit: 1000 }),
+    ])
+    const boards = toBoards(boardsRes.data ?? [])
+    const pages = toPages(pagesRes.data ?? [])
+    const navigations = toNavigations(navsRes.data ?? []).filter((n) => n.is_active)
+    const allNavItems = toNavItems(navItemsRes.data ?? [])
+
+    // 네비게이션별 resolved links 생성
+    const resolvedNavs = navigations.map((nav) => {
+      const items = allNavItems
+        .filter((i) => i.navigation_id === nav.id)
+        .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+      const links = items.map((item) => {
+        if (item.type === 'board') {
+          const board = boards.find((b) => b.id === item.target_id)
+          return board ? { label: item.label, to: `/boards/${board.slug}` } : null
+        }
+        if (item.type === 'page') {
+          const page = pages.find((p) => p.id === item.target_id)
+          return page ? { label: item.label, to: `/p/${page.slug}` } : null
+        }
+        return { label: item.label, to: item.url }
+      }).filter(Boolean) as { label: string; to: string }[]
+      return { slug: nav.slug, name: nav.name, links }
+    })
+
+    return { resolvedNavs }
+  },
   component: RootComponent,
   notFoundComponent: NotFoundPage,
   errorComponent: ErrorBoundary,

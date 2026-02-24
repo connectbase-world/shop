@@ -19,8 +19,12 @@ import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products/$productId'
 import { Route as PaymentSuccessRouteImport } from './routes/payment/success'
 import { Route as PaymentFailRouteImport } from './routes/payment/fail'
+import { Route as PSlugRouteImport } from './routes/p/$slug'
 import { Route as CouponCodeRouteImport } from './routes/coupon/$code'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as BoardsBoardSlugIndexRouteImport } from './routes/boards/$boardSlug/index'
+import { Route as BoardsBoardSlugNewRouteImport } from './routes/boards/$boardSlug/new'
+import { Route as BoardsBoardSlugPostIdRouteImport } from './routes/boards/$boardSlug/$postId'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -72,6 +76,11 @@ const PaymentFailRoute = PaymentFailRouteImport.update({
   path: '/payment/fail',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PSlugRoute = PSlugRouteImport.update({
+  id: '/p/$slug',
+  path: '/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CouponCodeRoute = CouponCodeRouteImport.update({
   id: '/coupon/$code',
   path: '/coupon/$code',
@@ -80,6 +89,21 @@ const CouponCodeRoute = CouponCodeRouteImport.update({
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BoardsBoardSlugIndexRoute = BoardsBoardSlugIndexRouteImport.update({
+  id: '/boards/$boardSlug/',
+  path: '/boards/$boardSlug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BoardsBoardSlugNewRoute = BoardsBoardSlugNewRouteImport.update({
+  id: '/boards/$boardSlug/new',
+  path: '/boards/$boardSlug/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BoardsBoardSlugPostIdRoute = BoardsBoardSlugPostIdRouteImport.update({
+  id: '/boards/$boardSlug/$postId',
+  path: '/boards/$boardSlug/$postId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -92,10 +116,14 @@ export interface FileRoutesByFullPath {
   '/wishlist': typeof WishlistRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/coupon/$code': typeof CouponCodeRoute
+  '/p/$slug': typeof PSlugRoute
   '/payment/fail': typeof PaymentFailRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/': typeof ProductsIndexRoute
+  '/boards/$boardSlug/$postId': typeof BoardsBoardSlugPostIdRoute
+  '/boards/$boardSlug/new': typeof BoardsBoardSlugNewRoute
+  '/boards/$boardSlug/': typeof BoardsBoardSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -106,10 +134,14 @@ export interface FileRoutesByTo {
   '/wishlist': typeof WishlistRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/coupon/$code': typeof CouponCodeRoute
+  '/p/$slug': typeof PSlugRoute
   '/payment/fail': typeof PaymentFailRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products': typeof ProductsIndexRoute
+  '/boards/$boardSlug/$postId': typeof BoardsBoardSlugPostIdRoute
+  '/boards/$boardSlug/new': typeof BoardsBoardSlugNewRoute
+  '/boards/$boardSlug': typeof BoardsBoardSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -121,10 +153,14 @@ export interface FileRoutesById {
   '/wishlist': typeof WishlistRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/coupon/$code': typeof CouponCodeRoute
+  '/p/$slug': typeof PSlugRoute
   '/payment/fail': typeof PaymentFailRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/': typeof ProductsIndexRoute
+  '/boards/$boardSlug/$postId': typeof BoardsBoardSlugPostIdRoute
+  '/boards/$boardSlug/new': typeof BoardsBoardSlugNewRoute
+  '/boards/$boardSlug/': typeof BoardsBoardSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -137,10 +173,14 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/auth/callback'
     | '/coupon/$code'
+    | '/p/$slug'
     | '/payment/fail'
     | '/payment/success'
     | '/products/$productId'
     | '/products/'
+    | '/boards/$boardSlug/$postId'
+    | '/boards/$boardSlug/new'
+    | '/boards/$boardSlug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -151,10 +191,14 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/auth/callback'
     | '/coupon/$code'
+    | '/p/$slug'
     | '/payment/fail'
     | '/payment/success'
     | '/products/$productId'
     | '/products'
+    | '/boards/$boardSlug/$postId'
+    | '/boards/$boardSlug/new'
+    | '/boards/$boardSlug'
   id:
     | '__root__'
     | '/'
@@ -165,10 +209,14 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/auth/callback'
     | '/coupon/$code'
+    | '/p/$slug'
     | '/payment/fail'
     | '/payment/success'
     | '/products/$productId'
     | '/products/'
+    | '/boards/$boardSlug/$postId'
+    | '/boards/$boardSlug/new'
+    | '/boards/$boardSlug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -180,10 +228,14 @@ export interface RootRouteChildren {
   WishlistRoute: typeof WishlistRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   CouponCodeRoute: typeof CouponCodeRoute
+  PSlugRoute: typeof PSlugRoute
   PaymentFailRoute: typeof PaymentFailRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
+  BoardsBoardSlugPostIdRoute: typeof BoardsBoardSlugPostIdRoute
+  BoardsBoardSlugNewRoute: typeof BoardsBoardSlugNewRoute
+  BoardsBoardSlugIndexRoute: typeof BoardsBoardSlugIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -258,6 +310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PaymentFailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/p/$slug': {
+      id: '/p/$slug'
+      path: '/p/$slug'
+      fullPath: '/p/$slug'
+      preLoaderRoute: typeof PSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/coupon/$code': {
       id: '/coupon/$code'
       path: '/coupon/$code'
@@ -272,6 +331,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/boards/$boardSlug/': {
+      id: '/boards/$boardSlug/'
+      path: '/boards/$boardSlug'
+      fullPath: '/boards/$boardSlug/'
+      preLoaderRoute: typeof BoardsBoardSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/boards/$boardSlug/new': {
+      id: '/boards/$boardSlug/new'
+      path: '/boards/$boardSlug/new'
+      fullPath: '/boards/$boardSlug/new'
+      preLoaderRoute: typeof BoardsBoardSlugNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/boards/$boardSlug/$postId': {
+      id: '/boards/$boardSlug/$postId'
+      path: '/boards/$boardSlug/$postId'
+      fullPath: '/boards/$boardSlug/$postId'
+      preLoaderRoute: typeof BoardsBoardSlugPostIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -284,10 +364,14 @@ const rootRouteChildren: RootRouteChildren = {
   WishlistRoute: WishlistRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   CouponCodeRoute: CouponCodeRoute,
+  PSlugRoute: PSlugRoute,
   PaymentFailRoute: PaymentFailRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
   ProductsIndexRoute: ProductsIndexRoute,
+  BoardsBoardSlugPostIdRoute: BoardsBoardSlugPostIdRoute,
+  BoardsBoardSlugNewRoute: BoardsBoardSlugNewRoute,
+  BoardsBoardSlugIndexRoute: BoardsBoardSlugIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

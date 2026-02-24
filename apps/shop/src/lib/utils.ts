@@ -1,4 +1,4 @@
-import type { Product, Order, Review, Coupon, UserCoupon, CartItem, MileageHistory, Influencer, Commission } from './types'
+import type { Product, Order, Review, Coupon, UserCoupon, CartItem, MileageHistory, Influencer, Commission, Post, Board, Page, Navigation, NavItem } from './types'
 
 export function formatPrice(price: number): string {
   return price.toLocaleString('ko-KR') + '원'
@@ -126,4 +126,44 @@ export function toReview(row: { id: string; data: Record<string, unknown> }): Re
 
 export function toReviews(rows: { id: string; data: Record<string, unknown> }[]): Review[] {
   return rows.map(toReview)
+}
+
+export function toPost(row: { id: string; data: Record<string, unknown> }): Post {
+  return { id: row.id, ...row.data } as Post
+}
+
+export function toPosts(rows: { id: string; data: Record<string, unknown> }[]): Post[] {
+  return rows.map(toPost)
+}
+
+export function toBoard(row: { id: string; data: Record<string, unknown> }): Board {
+  return { id: row.id, ...row.data } as Board
+}
+
+export function toBoards(rows: { id: string; data: Record<string, unknown> }[]): Board[] {
+  return rows.map(toBoard)
+}
+
+export function toPage(row: { id: string; data: Record<string, unknown> }): Page {
+  return { id: row.id, ...row.data } as Page
+}
+
+export function toPages(rows: { id: string; data: Record<string, unknown> }[]): Page[] {
+  return rows.map(toPage)
+}
+
+export function toNavigation(row: { id: string; data: Record<string, unknown> }): Navigation {
+  return { id: row.id, ...row.data } as Navigation
+}
+
+export function toNavigations(rows: { id: string; data: Record<string, unknown> }[]): Navigation[] {
+  return rows.map(toNavigation)
+}
+
+export function toNavItem(row: { id: string; data: Record<string, unknown> }): NavItem {
+  return { id: row.id, ...row.data } as NavItem
+}
+
+export function toNavItems(rows: { id: string; data: Record<string, unknown> }[]): NavItem[] {
+  return rows.map(toNavItem)
 }

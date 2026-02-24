@@ -147,6 +147,73 @@ export type Commission = {
   created_at: string
 }
 
+export type Board = {
+  id: string
+  name: string
+  slug: string
+  description: string
+  sort_order: number
+  is_active: boolean
+  show_in_nav: boolean
+  allow_user_posts: boolean
+  created_at: string
+}
+
+export type Post = {
+  id: string
+  board_id: string
+  title: string
+  content: string
+  content_format: 'html' | 'markdown'
+  summary: string
+  thumbnail: string
+  is_published: boolean
+  is_pinned: boolean
+  is_secret: boolean
+  member_id: string
+  view_count: number
+  author: string
+  created_at: string
+  updated_at: string
+}
+
+export type Page = {
+  id: string
+  title: string
+  slug: string
+  content: string
+  content_format: 'html' | 'markdown'
+  summary: string
+  thumbnail: string
+  banner_image: string
+  is_published: boolean
+  show_in_nav: boolean
+  nav_label: string
+  nav_order: number
+  author: string
+  view_count: number
+  created_at: string
+  updated_at: string
+}
+
+export type Navigation = {
+  id: string
+  name: string
+  slug: string
+  is_active: boolean
+  created_at: string
+}
+
+export type NavItem = {
+  id: string
+  navigation_id: string
+  type: 'board' | 'page' | 'link'
+  target_id: string
+  label: string
+  url: string
+  sort_order: number
+}
+
 export type Member = {
   memberId: string
   nickname: string

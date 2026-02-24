@@ -13,6 +13,11 @@ export const INFLUENCERS_TABLE_ID = 'dcbfe9fc-8661-4a45-bd55-6bb9cbfe5f30'
 export const COMMISSIONS_TABLE_ID = 'c9ed7a77-fd3e-4def-9482-8f7a9da5a357'
 export const DEFAULT_COMMISSION_RATE = 0.05
 export const MAX_QUERY_LIMIT = 1000
+export const POSTS_TABLE_ID = 'd6d86f35-1fda-4dcc-8194-2e3584971fe1'
+export const BOARDS_TABLE_ID = 'a64b20b7-800f-42ed-ad78-598a02b37a40'
+export const PAGES_TABLE_ID = 'e1328a21-a403-4523-9473-dd9afc6aa036'
+export const NAVIGATIONS_TABLE_ID = '4bd65ca7-6b4c-4a9d-83c1-70df2ad5ec24'
+export const NAV_ITEMS_TABLE_ID = '585054ff-2c87-42c0-bf5a-dc42c0391bc3'
 
 export const SUPPORTED_LANGUAGES: { code: import('./types').SupportedLocale; label: string }[] = [
   { code: 'en', label: 'English' },

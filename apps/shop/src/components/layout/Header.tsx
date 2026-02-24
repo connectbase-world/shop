@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, getRouteApi } from '@tanstack/react-router'
 import { ShoppingBag, Menu, User, LogOut, ClipboardList, Heart, Globe } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { useAuth } from '@/hooks/useAuth'
@@ -8,11 +8,14 @@ import { useI18n } from '@/hooks/useI18n'
 import { MobileMenu } from './MobileMenu'
 import type { Locale } from '@/lib/i18n'
 
+const rootApi = getRouteApi('__root__')
+
 export function Header() {
   const { totalItems } = useCart()
   const { user, logout } = useAuth()
   const { count: wishlistCount } = useWishlist()
   const { t, locale, setLocale } = useI18n()
+  const { resolvedNavs } = rootApi.useLoaderData()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -55,6 +58,18 @@ export function Header() {
             >
               {t.common.products}
             </Link>
+            {resolvedNavs.flatMap((nav) =>
+              nav.links.map((link) => (
+                <Link
+                  key={`${nav.slug}-${link.to}`}
+                  to={link.to}
+                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                  activeProps={{ className: 'text-sm text-gray-900 font-medium' }}
+                >
+                  {link.label}
+                </Link>
+              )),
+            )}
           </nav>
         </div>
 
@@ -143,6 +158,7 @@ export function Header() {
         onClose={() => setMobileOpen(false)}
         user={user}
         onLogout={logout}
+        resolvedNavs={resolvedNavs}
       />
     </header>
   )

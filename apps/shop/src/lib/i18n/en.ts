@@ -304,6 +304,30 @@ const en: Translations = {
     loginButton: 'Login to Claim',
   },
 
+  // Boards
+  boards: {
+    noPosts: 'No posts available',
+    views: 'Views',
+    pinned: 'Pinned',
+    writePost: 'Write',
+    loginToWrite: 'Please log in to write a post.',
+    postTitle: 'Title',
+    postTitlePlaceholder: 'Enter title',
+    postContent: 'Content',
+    postContentPlaceholder: 'Enter content',
+    supported: 'syntax supported',
+    submitting: 'Submitting...',
+    secretPost: 'Secret',
+    secretPostHidden: 'This post is private',
+    secretPostBlocked: 'Private Post',
+    secretPostBlockedDesc: 'Only the author can view this post.',
+  },
+
+  // Pages
+  pages: {
+    noPages: 'No pages available',
+  },
+
   // Footer
   footer: {
     companyInfo: 'Company: Shop | CEO: John Doe',
