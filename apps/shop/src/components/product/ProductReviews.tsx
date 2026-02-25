@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Star, Send } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Star, Send, ImagePlus, X } from 'lucide-react'
 import { cb } from '@/lib/connectbase'
-import { REVIEWS_TABLE_ID } from '@/lib/constants'
+import { REVIEWS_TABLE_ID, FILE_STORAGE_ID } from '@/lib/constants'
 import { toReviews } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useI18n } from '@/hooks/useI18n'
@@ -60,6 +60,9 @@ export function ProductReviews({ productId }: Props) {
   const [rating, setRating] = useState(5)
   const [content, setContent] = useState('')
   const [error, setError] = useState('')
+  const [reviewImages, setReviewImages] = useState<string[]>([])
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const imageInputRef = useRef<HTMLInputElement>(null)
 
   const loadReviews = useCallback(async () => {
     try {
@@ -85,6 +88,21 @@ export function ProductReviews({ productId }: Props) {
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : 0
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    setUploadingImage(true)
+    for (const file of Array.from(files)) {
+      try {
+        const result = await cb.storage.uploadFile(FILE_STORAGE_ID, file, { path: '/reviews' })
+        const url = cb.storage.getFileUrl(result)
+        if (url) setReviewImages((prev) => [...prev, url])
+      } catch { /* ignore */ }
+    }
+    setUploadingImage(false)
+    e.target.value = ''
+  }
+
   const handleSubmit = async () => {
     if (!content.trim()) {
       setError(t.review.contentRequired)
@@ -103,11 +121,13 @@ export function ProductReviews({ productId }: Props) {
           nickname: user.nickname || t.review.defaultNickname,
           rating,
           content: content.trim(),
+          images: reviewImages,
           created_at: new Date().toISOString(),
         },
       })
       setContent('')
       setRating(5)
+      setReviewImages([])
       await loadReviews()
     } catch {
       setError(t.review.submitFailed)
@@ -184,15 +204,52 @@ export function ProductReviews({ productId }: Props) {
               className="flex-1 px-4 py-3 border border-gray-200 text-sm outline-none focus:border-black transition-colors"
               disabled={submitting}
             />
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => imageInputRef.current?.click()}
+              disabled={uploadingImage || reviewImages.length >= 5}
+              className="px-3 py-3 border border-gray-200 text-gray-500 hover:text-black hover:border-black transition-colors disabled:opacity-50 shrink-0"
+              title={t.review.addImage}
+            >
+              <ImagePlus className="w-4 h-4" />
+            </button>
             <button
               onClick={handleSubmit}
-              disabled={submitting}
+              disabled={submitting || uploadingImage}
               className="px-5 py-3 bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-1.5 shrink-0"
             >
               <Send className="w-4 h-4" />
               {t.review.submit}
             </button>
           </div>
+          {reviewImages.length > 0 && (
+            <div className="flex gap-2 mt-3">
+              {reviewImages.map((url, i) => (
+                <div key={i} className="relative w-16 h-16 rounded overflow-hidden bg-gray-100">
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => setReviewImages((prev) => prev.filter((_, idx) => idx !== i))}
+                    className="absolute top-0 right-0 bg-black/60 text-white p-0.5 rounded-bl"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              {uploadingImage && (
+                <div className="w-16 h-16 rounded bg-gray-100 flex items-center justify-center">
+                  <span className="text-xs text-gray-400">{t.common.loading}</span>
+                </div>
+              )}
+            </div>
+          )}
           {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
         </div>
       ) : (
@@ -238,6 +295,15 @@ export function ProductReviews({ productId }: Props) {
                 </div>
               </div>
               <p className="text-sm text-gray-700">{review.content}</p>
+              {review.images && review.images.length > 0 && (
+                <div className="flex gap-2 mt-2">
+                  {review.images.map((img, i) => (
+                    <a key={i} href={img} target="_blank" rel="noopener noreferrer">
+                      <img src={img} alt="" className="w-16 h-16 rounded object-cover bg-gray-100 hover:opacity-80 transition-opacity" />
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -4,9 +4,9 @@ import type { CartItem, Product } from '@/lib/types'
 
 export type CartContextType = {
   items: CartItem[]
-  addItem: (product: Product, quantity?: number) => void
-  removeItem: (productId: string) => void
-  updateQuantity: (productId: string, quantity: number) => void
+  addItem: (product: Product, quantity?: number, selectedOptions?: Record<string, string>) => void
+  removeItem: (productId: string, selectedOptions?: Record<string, string>) => void
+  updateQuantity: (productId: string, quantity: number, selectedOptions?: Record<string, string>) => void
   clearCart: () => void
   totalItems: number
   totalPrice: number
@@ -15,6 +15,16 @@ export type CartContextType = {
 export const CartContext = createContext<CartContextType | null>(null)
 
 const STORAGE_KEY = 'shop-cart'
+
+function cartItemKey(productId: string, selectedOptions?: Record<string, string>): string {
+  if (!selectedOptions || Object.keys(selectedOptions).length === 0) return productId
+  const sorted = Object.keys(selectedOptions).sort().map((k) => `${k}:${selectedOptions[k]}`).join('|')
+  return `${productId}::${sorted}`
+}
+
+function matchItem(item: CartItem, productId: string, selectedOptions?: Record<string, string>): boolean {
+  return cartItemKey(item.productId, item.selectedOptions) === cartItemKey(productId, selectedOptions)
+}
 
 function loadCart(): CartItem[] {
   try {
@@ -32,12 +42,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
   }, [items])
 
-  const addItem = useCallback((product: Product, quantity = 1) => {
+  const addItem = useCallback((product: Product, quantity = 1, selectedOptions?: Record<string, string>) => {
     setItems((prev) => {
-      const existing = prev.find((item) => item.productId === product.id)
+      const existing = prev.find((item) => matchItem(item, product.id, selectedOptions))
       if (existing) {
         return prev.map((item) =>
-          item.productId === product.id
+          matchItem(item, product.id, selectedOptions)
             ? { ...item, quantity: item.quantity + quantity }
             : item,
         )
@@ -47,33 +57,42 @@ export function CartProvider({ children }: { children: ReactNode }) {
             Object.entries(product.translations).map(([loc, t]) => [loc, { name: t?.name }]),
           )
         : undefined
+      // Calculate price with variant additional_price
+      let price = product.price
+      if (selectedOptions && product.variants) {
+        const variant = product.variants.find((v) =>
+          Object.entries(selectedOptions).every(([k, val]) => v.options[k] === val),
+        )
+        if (variant) price += variant.additional_price
+      }
       return [
         ...prev,
         {
           productId: product.id,
           name: product.name,
-          price: product.price,
+          price,
           image: product.image,
           quantity,
           category: product.category,
           translations,
+          selectedOptions,
         },
       ]
     })
   }, [])
 
-  const removeItem = useCallback((productId: string) => {
-    setItems((prev) => prev.filter((item) => item.productId !== productId))
+  const removeItem = useCallback((productId: string, selectedOptions?: Record<string, string>) => {
+    setItems((prev) => prev.filter((item) => !matchItem(item, productId, selectedOptions)))
   }, [])
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
+  const updateQuantity = useCallback((productId: string, quantity: number, selectedOptions?: Record<string, string>) => {
     if (quantity <= 0) {
-      setItems((prev) => prev.filter((item) => item.productId !== productId))
+      setItems((prev) => prev.filter((item) => !matchItem(item, productId, selectedOptions)))
       return
     }
     setItems((prev) =>
       prev.map((item) =>
-        item.productId === productId ? { ...item, quantity } : item,
+        matchItem(item, productId, selectedOptions) ? { ...item, quantity } : item,
       ),
     )
   }, [])

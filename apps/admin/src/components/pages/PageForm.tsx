@@ -23,9 +23,12 @@ type Props = {
   initial?: Page
   onSubmit: (data: PageFormData) => Promise<void>
   submitLabel: string
+  existingSlugs?: string[]
 }
 
-export function PageForm({ initial, onSubmit, submitLabel }: Props) {
+const DEFAULT_SLUGS = ['about', 'terms', 'privacy', 'contact', 'guide']
+
+export function PageForm({ initial, onSubmit, submitLabel, existingSlugs = [] }: Props) {
   const [form, setForm] = useState<PageFormData>({
     title: initial?.title ?? '',
     slug: initial?.slug ?? '',
@@ -163,7 +166,7 @@ export function PageForm({ initial, onSubmit, submitLabel }: Props) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1.5">슬러그 (URL) *</label>
+          <label className="block text-sm font-medium mb-1.5">주소 이름 (슬러그) *</label>
           <input
             type="text"
             value={form.slug}
@@ -171,7 +174,30 @@ export function PageForm({ initial, onSubmit, submitLabel }: Props) {
             className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm outline-none focus:border-gray-400"
             required
           />
-          <p className="text-xs text-gray-400 mt-1">Shop URL: /p/{form.slug || '...'}</p>
+          <p className="text-xs text-gray-400 mt-1.5">
+            인터넷 주소에 표시되는 영문 이름입니다 → <span className="text-gray-600 font-medium">/p/{form.slug || '...'}</span>
+          </p>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {[...new Set([...existingSlugs, ...DEFAULT_SLUGS])].map((s) => {
+              const isTaken = existingSlugs.includes(s) && s !== initial?.slug
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, slug: s }))}
+                  className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
+                    form.slug === s
+                      ? 'bg-gray-900 text-white border-gray-900'
+                      : isTaken
+                        ? 'bg-gray-50 text-gray-300 border-gray-100 line-through'
+                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                  }`}
+                >
+                  {s}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 

@@ -34,14 +34,14 @@ function CartPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12">
         <div>
-          {items.map((item) => (
+          {items.map((item, idx) => (
             <CartItem
-              key={item.productId}
+              key={`${item.productId}-${JSON.stringify(item.selectedOptions ?? {})}-${idx}`}
               item={item}
               onUpdateQuantity={(qty) =>
-                updateQuantity(item.productId, qty)
+                updateQuantity(item.productId, qty, item.selectedOptions)
               }
-              onRemove={() => removeItem(item.productId)}
+              onRemove={() => removeItem(item.productId, item.selectedOptions)}
             />
           ))}
         </div>

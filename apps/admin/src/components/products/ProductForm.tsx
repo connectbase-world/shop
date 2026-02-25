@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react'
-import { Plus, X, Upload, Loader2, ImageIcon, Images, FileImage, Globe, ChevronDown } from 'lucide-react'
+import { Plus, X, Upload, Loader2, ImageIcon, Images, FileImage, Globe, ChevronDown, Layers } from 'lucide-react'
 import { cb } from '@/lib/connectbase'
 import { CATEGORIES, FILE_STORAGE_ID, SUPPORTED_LANGUAGES } from '@/lib/constants'
-import type { SupportedLocale, ProductTranslation } from '@/lib/types'
+import type { SupportedLocale, ProductTranslation, ProductOption, ProductVariant } from '@/lib/types'
 
 export type ProductFormData = {
   name: string
@@ -15,6 +15,8 @@ export type ProductFormData = {
   is_featured: boolean
   stock: number
   translations?: Partial<Record<SupportedLocale, ProductTranslation>>
+  options?: ProductOption[]
+  variants?: ProductVariant[]
 }
 
 type ProductFormProps = {
@@ -34,6 +36,28 @@ const defaultData: ProductFormData = {
   is_featured: false,
   stock: 0,
   translations: undefined,
+  options: undefined,
+  variants: undefined,
+}
+
+function generateVariants(options: ProductOption[], existing?: ProductVariant[]): ProductVariant[] {
+  if (options.length === 0) return []
+  const combinations: Record<string, string>[] = [{}]
+  for (const opt of options) {
+    const next: Record<string, string>[] = []
+    for (const combo of combinations) {
+      for (const val of opt.values) {
+        next.push({ ...combo, [opt.name]: val })
+      }
+    }
+    combinations.length = 0
+    combinations.push(...next)
+  }
+  return combinations.map((combo) => {
+    const key = JSON.stringify(combo)
+    const prev = existing?.find((v) => JSON.stringify(v.options) === key)
+    return prev ?? { options: combo, stock: 0, additional_price: 0 }
+  })
 }
 
 export function ProductForm({ initialData, onSubmit, submitLabel }: ProductFormProps) {
@@ -426,6 +450,24 @@ export function ProductForm({ initialData, onSubmit, submitLabel }: ProductFormP
             추천 상품으로 설정
           </label>
         </div>
+
+        {/* 상품 옵션 */}
+        <div className="border-t border-gray-200 pt-5">
+          <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+            <Layers className="w-4 h-4 text-gray-400" />
+            상품 옵션 <span className="text-xs font-normal text-gray-400 ml-1">(선택)</span>
+          </label>
+          <p className="text-xs text-gray-400 mb-3">
+            사이즈, 색상 등 옵션을 추가하면 조합별로 재고와 추가 가격을 설정할 수 있습니다.
+          </p>
+          <OptionsEditor
+            options={form.options ?? []}
+            variants={form.variants ?? []}
+            onChange={(options, variants) => {
+              setForm((prev) => ({ ...prev, options, variants }))
+            }}
+          />
+        </div>
       </div>
 
       {error && (
@@ -498,6 +540,171 @@ function TranslationSection({
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function OptionsEditor({
+  options,
+  variants,
+  onChange,
+}: {
+  options: ProductOption[]
+  variants: ProductVariant[]
+  onChange: (options: ProductOption[], variants: ProductVariant[]) => void
+}) {
+  const [newOptName, setNewOptName] = useState('')
+
+  const addOption = () => {
+    if (!newOptName.trim()) return
+    if (options.some((o) => o.name === newOptName.trim())) return
+    const next = [...options, { name: newOptName.trim(), values: [] }]
+    onChange(next, generateVariants(next, variants))
+    setNewOptName('')
+  }
+
+  const removeOption = (idx: number) => {
+    const next = options.filter((_, i) => i !== idx)
+    onChange(next, generateVariants(next, variants))
+  }
+
+  const addValue = (optIdx: number, value: string) => {
+    if (!value.trim()) return
+    const opt = options[optIdx]
+    if (opt.values.includes(value.trim())) return
+    const next = options.map((o, i) =>
+      i === optIdx ? { ...o, values: [...o.values, value.trim()] } : o,
+    )
+    onChange(next, generateVariants(next, variants))
+  }
+
+  const removeValue = (optIdx: number, valIdx: number) => {
+    const next = options.map((o, i) =>
+      i === optIdx ? { ...o, values: o.values.filter((_, vi) => vi !== valIdx) } : o,
+    )
+    onChange(next, generateVariants(next, variants))
+  }
+
+  const updateVariant = (vIdx: number, field: 'stock' | 'additional_price', value: number) => {
+    const next = variants.map((v, i) => (i === vIdx ? { ...v, [field]: value } : v))
+    onChange(options, next)
+  }
+
+  const hasOptions = options.length > 0
+  const hasCompleteOptions = options.length > 0 && options.every((o) => o.values.length > 0)
+
+  return (
+    <div className="space-y-3">
+      {/* 옵션 그룹 목록 */}
+      {options.map((opt, optIdx) => (
+        <div key={optIdx} className="border border-gray-200 rounded-md p-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">{opt.name}</span>
+            <button type="button" onClick={() => removeOption(optIdx)} className="p-1 text-gray-400 hover:text-red-500">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {opt.values.map((val, valIdx) => (
+              <span key={valIdx} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-xs rounded-md">
+                {val}
+                <button type="button" onClick={() => removeValue(optIdx, valIdx)} className="text-gray-400 hover:text-red-500">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+          <OptionValueInput onAdd={(val) => addValue(optIdx, val)} />
+        </div>
+      ))}
+
+      {/* 옵션 추가 */}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={newOptName}
+          onChange={(e) => setNewOptName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOption() } }}
+          placeholder="옵션명 (예: 사이즈, 색상)"
+          className="flex-1 px-3 py-1.5 border border-gray-200 rounded-md text-sm outline-none focus:border-gray-400"
+        />
+        <button type="button" onClick={addOption} className="px-3 py-1.5 text-xs border border-gray-200 rounded-md hover:bg-gray-50">
+          <Plus className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* 조합별 재고/추가가격 */}
+      {hasCompleteOptions && variants.length > 0 && (
+        <div className="mt-4">
+          <p className="text-xs font-medium text-gray-500 mb-2">옵션 조합별 재고 · 추가가격</p>
+          <div className="border border-gray-200 rounded-md overflow-hidden">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="text-left px-3 py-2 font-medium">옵션</th>
+                  <th className="text-center px-3 py-2 font-medium w-24">재고</th>
+                  <th className="text-center px-3 py-2 font-medium w-28">추가가격</th>
+                </tr>
+              </thead>
+              <tbody>
+                {variants.map((v, vIdx) => (
+                  <tr key={vIdx} className="border-b border-gray-50">
+                    <td className="px-3 py-2 text-gray-700">
+                      {Object.entries(v.options).map(([k, val]) => `${k}: ${val}`).join(' / ')}
+                    </td>
+                    <td className="px-3 py-1.5">
+                      <input
+                        type="number"
+                        value={v.stock || ''}
+                        onChange={(e) => updateVariant(vIdx, 'stock', Number(e.target.value) || 0)}
+                        min={0}
+                        className="w-full px-2 py-1 border border-gray-200 rounded text-center text-xs outline-none focus:border-gray-400"
+                      />
+                    </td>
+                    <td className="px-3 py-1.5">
+                      <input
+                        type="number"
+                        value={v.additional_price || ''}
+                        onChange={(e) => updateVariant(vIdx, 'additional_price', Number(e.target.value) || 0)}
+                        min={0}
+                        className="w-full px-2 py-1 border border-gray-200 rounded text-center text-xs outline-none focus:border-gray-400"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {hasOptions && !hasCompleteOptions && (
+        <p className="text-xs text-amber-600">각 옵션에 최소 1개 이상의 값을 추가해주세요.</p>
+      )}
+    </div>
+  )
+}
+
+function OptionValueInput({ onAdd }: { onAdd: (value: string) => void }) {
+  const [value, setValue] = useState('')
+  const handleAdd = () => {
+    if (!value.trim()) return
+    onAdd(value.trim())
+    setValue('')
+  }
+  return (
+    <div className="flex gap-1.5">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAdd() } }}
+        placeholder="값 입력 후 Enter"
+        className="flex-1 px-2 py-1 border border-gray-200 rounded text-xs outline-none focus:border-gray-400"
+      />
+      <button type="button" onClick={handleAdd} className="px-2 py-1 text-[11px] border border-gray-200 rounded hover:bg-gray-50">
+        추가
+      </button>
     </div>
   )
 }

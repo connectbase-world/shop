@@ -14,6 +14,7 @@ type ProductSearch = {
   category?: string
   page?: number
   q?: string
+  sort?: string
 }
 
 export const Route = createFileRoute('/products/')({
@@ -21,6 +22,7 @@ export const Route = createFileRoute('/products/')({
     category: (search.category as string) || undefined,
     page: Number(search.page) || 1,
     q: (search.q as string) || undefined,
+    sort: (search.sort as string) || undefined,
   }),
   loaderDeps: ({ search }) => ({ search }),
   component: ProductListPage,
@@ -62,7 +64,7 @@ export const Route = createFileRoute('/products/')({
 
 function ProductListPage() {
   const { products, total } = Route.useLoaderData()
-  const { category, page, q } = Route.useSearch()
+  const { category, page, q, sort } = Route.useSearch()
   const navigate = useNavigate()
   const { t, locale } = useI18n()
   const currentPage = page || 1
@@ -79,6 +81,15 @@ function ProductListPage() {
         )
       })
     : products
+
+  // 정렬
+  const sorted = [...filtered].sort((a, b) => {
+    if (sort === 'price_asc') return a.price - b.price
+    if (sort === 'price_desc') return b.price - a.price
+    if (sort === 'name') return a.name.localeCompare(b.name, 'ko')
+    // 기본: 최신순 (created_at desc)
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
 
   const displayTotal = q ? filtered.length : total
   const hasMore = !q && currentPage * PRODUCTS_PER_PAGE < total
@@ -161,21 +172,36 @@ function ProductListPage() {
         })}
       </div>
 
-      {/* 검색 결과 안내 */}
-      {q && (
-        <div className="mb-6 flex items-center gap-2 text-sm text-gray-500">
-          <span>"{q}" {t.product.searchResults}</span>
-          <button onClick={clearSearch} className="text-xs text-gray-400 hover:text-black underline">
-            {t.product.clearSearch}
-          </button>
-        </div>
-      )}
+      {/* 정렬 + 검색 결과 */}
+      <div className="flex items-center justify-between mb-6">
+        {q ? (
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span>"{q}" {t.product.searchResults}</span>
+            <button onClick={clearSearch} className="text-xs text-gray-400 hover:text-black underline">
+              {t.product.clearSearch}
+            </button>
+          </div>
+        ) : <div />}
+        <select
+          value={sort || 'latest'}
+          onChange={(e) => {
+            const v = e.target.value === 'latest' ? undefined : e.target.value
+            navigate({ to: '/products', search: { category, q, sort: v } })
+          }}
+          className="px-3 py-1.5 border border-gray-200 text-sm outline-none bg-white rounded-sm"
+        >
+          <option value="latest">최신순</option>
+          <option value="price_asc">낮은 가격순</option>
+          <option value="price_desc">높은 가격순</option>
+          <option value="name">이름순</option>
+        </select>
+      </div>
 
       {/* 상품 그리드 */}
-      {filtered.length > 0 ? (
+      {sorted.length > 0 ? (
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filtered.map((product) => (
+            {sorted.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
@@ -187,7 +213,7 @@ function ProductListPage() {
                 onClick={() =>
                   navigate({
                     to: '/products',
-                    search: { category, page: currentPage + 1, q },
+                    search: { category, page: currentPage + 1, q, sort },
                   })
                 }
               >

@@ -111,7 +111,18 @@ function PaymentSuccessPage() {
               const allProducts = toProducts(stockResult.data ?? [])
               for (const item of order.items || []) {
                 const product = allProducts.find((p: { id: string }) => p.id === item.productId)
-                if (product && product.stock > 0) {
+                if (!product) continue
+                if (item.selectedOptions && product.variants && product.variants.length > 0) {
+                  // 옵션 상품: variant 재고 차감
+                  const updatedVariants = product.variants.map((v: { options: Record<string, string>; stock: number; additional_price: number }) => {
+                    const isMatch = Object.entries(item.selectedOptions!).every(([k, val]: [string, string]) => v.options[k] === val)
+                    return isMatch ? { ...v, stock: Math.max(0, v.stock - item.quantity) } : v
+                  })
+                  await cb.database.updateData(PRODUCTS_TABLE_ID, product.id, {
+                    data: { variants: updatedVariants },
+                  })
+                } else if (product.stock > 0) {
+                  // 일반 상품: base stock 차감
                   await cb.database.updateData(PRODUCTS_TABLE_ID, product.id, {
                     data: { stock: Math.max(0, product.stock - item.quantity) },
                   })

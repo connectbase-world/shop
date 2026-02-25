@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Eye, Search, X, ChevronDown } from 'lucide-react'
+import { Eye, Search, X, ChevronDown, Download } from 'lucide-react'
 import { cb } from '@/lib/connectbase'
 import { ORDERS_TABLE_ID, PRODUCTS_TABLE_ID, COUPONS_TABLE_ID, USER_COUPONS_TABLE_ID, MILEAGE_HISTORY_TABLE_ID } from '@/lib/constants'
 import { toOrders, toProducts, toCoupons, toUserCoupons, toMileageHistories, getMileageBalance, formatPrice, formatDateTime } from '@/lib/utils'
@@ -12,14 +12,22 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
   shipped: { label: '배송중', color: 'bg-purple-100 text-purple-700' },
   delivered: { label: '배송완료', color: 'bg-green-100 text-green-700' },
   cancelled: { label: '취소됨', color: 'bg-red-100 text-red-700' },
+  return_requested: { label: '반품신청', color: 'bg-orange-100 text-orange-700' },
+  return_completed: { label: '반품완료', color: 'bg-gray-100 text-gray-700' },
+  exchange_requested: { label: '교환신청', color: 'bg-teal-100 text-teal-700' },
+  exchange_completed: { label: '교환완료', color: 'bg-emerald-100 text-emerald-700' },
 }
 
 const STATUS_FLOW: Record<string, string[]> = {
   paid: ['preparing', 'cancelled'],
   preparing: ['shipped', 'cancelled'],
   shipped: ['delivered'],
-  delivered: [],
+  delivered: ['return_requested', 'exchange_requested'],
   cancelled: [],
+  return_requested: ['return_completed', 'delivered'],
+  return_completed: [],
+  exchange_requested: ['exchange_completed', 'delivered'],
+  exchange_completed: [],
 }
 
 export const Route = createFileRoute('/orders/')({
@@ -55,14 +63,17 @@ function OrderListPage() {
     if (newStatus === 'cancelled') {
       if (!confirm('주문을 취소하시겠습니까? 재고, 쿠폰, 마일리지가 복원됩니다.')) return
     }
+    if (newStatus === 'return_completed') {
+      if (!confirm('반품을 완료 처리하시겠습니까? 재고, 쿠폰, 마일리지가 복원됩니다.')) return
+    }
 
     try {
       await cb.database.updateData(ORDERS_TABLE_ID, orderId, {
         data: { status: newStatus },
       })
 
-      // 취소 시 재고/쿠폰/마일리지 복원
-      if (newStatus === 'cancelled') {
+      // 취소/반품완료 시 재고/쿠폰/마일리지 복원
+      if (newStatus === 'cancelled' || newStatus === 'return_completed') {
         // 재고 복원
         try {
           const stockResult = await cb.database.getData(PRODUCTS_TABLE_ID, { limit: 1000 })
@@ -205,11 +216,51 @@ function OrderListPage() {
     setStatusFilter('')
   }
 
+  const handleExportCSV = () => {
+    const esc = (v: string) => `"${String(v ?? '').replace(/"/g, '""')}"`
+    const header = ['주문번호', '주문일시', '주문명', '주문자', '연락처', '주소', '상세주소', '메모', '결제금액', '상태', '택배사', '운송장번호', '상품목록']
+    const rows = filtered.map((o) => [
+      esc(o.order_id),
+      esc(formatDateTime(o.created_at)),
+      esc(o.order_name),
+      esc(o.customer_name),
+      esc(o.customer_phone),
+      esc(o.address),
+      esc(o.address_detail),
+      esc(o.memo),
+      o.amount,
+      esc((STATUS_MAP[o.status]?.label) || o.status),
+      esc(o.tracking_carrier || ''),
+      esc(o.tracking_number || ''),
+      esc((o.items ?? []).map((i) => `${i.name} x${i.quantity}`).join(', ')),
+    ])
+    const bom = '\uFEFF'
+    const csv = bom + [header.join(','), ...rows.map((r) => r.join(','))].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `orders_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">주문 관리</h1>
-        <span className="text-sm text-gray-500">{filtered.length}건</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-500">{filtered.length}건</span>
+          {filtered.length > 0 && (
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              CSV 다운로드
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 상태 필터 */}
@@ -353,6 +404,17 @@ function OrderListPage() {
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
           onStatusChange={handleStatusChange}
+          onTrackingUpdate={async (orderId, carrier, number) => {
+            await cb.database.updateData(ORDERS_TABLE_ID, orderId, {
+              data: { tracking_carrier: carrier, tracking_number: number },
+            })
+            setOrders((prev) =>
+              prev.map((o) => (o.id === orderId ? { ...o, tracking_carrier: carrier, tracking_number: number } : o)),
+            )
+            setSelectedOrder((prev) =>
+              prev ? { ...prev, tracking_carrier: carrier, tracking_number: number } : null,
+            )
+          }}
         />
       )}
     </div>
@@ -415,16 +477,27 @@ function OrderDetailModal({
   order,
   onClose,
   onStatusChange,
+  onTrackingUpdate,
 }: {
   order: Order
   onClose: () => void
   onStatusChange: (orderId: string, newStatus: string) => void
+  onTrackingUpdate: (orderId: string, carrier: string, number: string) => void
 }) {
+  const [carrier, setCarrier] = useState(order.tracking_carrier || '')
+  const [trackingNum, setTrackingNum] = useState(order.tracking_number || '')
+  const [savingTracking, setSavingTracking] = useState(false)
   const status = STATUS_MAP[order.status] ?? {
     label: order.status,
     color: 'bg-gray-100 text-gray-700',
   }
   const nextStatuses = STATUS_FLOW[order.status] ?? []
+
+  const handleSaveTracking = async () => {
+    setSavingTracking(true)
+    await onTrackingUpdate(order.id, carrier, trackingNum)
+    setSavingTracking(false)
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -460,6 +533,12 @@ function OrderDetailModal({
               <span className="text-gray-500">주문일시</span>
               <span>{formatDateTime(order.created_at)}</span>
             </div>
+            {order.return_reason && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">반품/교환 사유</span>
+                <span className="text-right max-w-[60%] text-orange-700">{order.return_reason}</span>
+              </div>
+            )}
           </div>
 
           {/* 상태 변경 */}
@@ -509,6 +588,43 @@ function OrderDetailModal({
                 </div>
               )}
             </div>
+
+            {/* 운송장 입력 */}
+            {(order.status === 'preparing' || order.status === 'shipped' || order.status === 'delivered') && (
+              <div className="mt-3 bg-blue-50 rounded-md p-3">
+                <p className="text-xs font-medium text-blue-700 mb-2">운송장 정보</p>
+                <div className="flex gap-2">
+                  <select
+                    value={carrier}
+                    onChange={(e) => setCarrier(e.target.value)}
+                    className="px-2 py-1.5 border border-gray-200 rounded text-xs outline-none bg-white"
+                  >
+                    <option value="">택배사</option>
+                    <option value="cj">CJ대한통운</option>
+                    <option value="hanjin">한진택배</option>
+                    <option value="lotte">롯데택배</option>
+                    <option value="logen">로젠택배</option>
+                    <option value="post">우체국택배</option>
+                    <option value="gs">GS25편의점택배</option>
+                    <option value="etc">기타</option>
+                  </select>
+                  <input
+                    type="text"
+                    value={trackingNum}
+                    onChange={(e) => setTrackingNum(e.target.value)}
+                    placeholder="운송장 번호"
+                    className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs outline-none focus:border-gray-400"
+                  />
+                  <button
+                    onClick={handleSaveTracking}
+                    disabled={savingTracking || !carrier || !trackingNum}
+                    className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50 shrink-0"
+                  >
+                    {savingTracking ? '저장...' : '저장'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
@@ -525,6 +641,9 @@ function OrderDetailModal({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{item.name}</p>
+                    {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
+                      <p className="text-xs text-gray-400">{Object.entries(item.selectedOptions).map(([k, v]) => `${k}: ${v}`).join(' / ')}</p>
+                    )}
                     <p className="text-xs text-gray-500">
                       {formatPrice(item.price)} x {item.quantity}
                     </p>

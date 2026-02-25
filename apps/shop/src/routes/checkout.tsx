@@ -29,6 +29,7 @@ function CheckoutPage() {
   const { t, locale } = useI18n()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [agreeTerms, setAgreeTerms] = useState(false)
   const [form, setForm] = useState<OrderInfo>({
     name: '',
     phone: '',
@@ -210,6 +211,10 @@ function CheckoutPage() {
       setError(t.checkout.fieldRequired)
       return
     }
+    if (!agreeTerms) {
+      setError(t.checkout.agreeRequired)
+      return
+    }
 
     setLoading(true)
     setError('')
@@ -255,6 +260,7 @@ function CheckoutPage() {
           price: item.price,
           quantity: item.quantity,
           image: item.image,
+          selectedOptions: item.selectedOptions,
         })),
         customerName: form.name,
         customerPhone: form.phone,
@@ -292,8 +298,8 @@ function CheckoutPage() {
       <section className="mb-10">
         <h2 className="text-lg font-bold mb-4">{t.checkout.orderItems}</h2>
         <div className="border border-gray-100 rounded-sm divide-y divide-gray-100">
-          {items.map((item) => (
-            <div key={item.productId} className="flex items-center gap-4 p-4">
+          {items.map((item, idx) => (
+            <div key={`${item.productId}-${idx}`} className="flex items-center gap-4 p-4">
               <div className="w-16 h-20 bg-gray-100 rounded-sm overflow-hidden shrink-0">
                 <img
                   src={item.image}
@@ -303,6 +309,9 @@ function CheckoutPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm truncate">{getCartItemName(item, locale)}</p>
+                {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
+                  <p className="text-xs text-gray-400 mt-0.5">{Object.entries(item.selectedOptions).map(([k, v]) => `${k}: ${v}`).join(' / ')}</p>
+                )}
                 <p className="text-xs text-gray-500 mt-1">{t.common.quantity}: {item.quantity}</p>
               </div>
               <p className="text-sm font-bold shrink-0">
@@ -576,6 +585,21 @@ function CheckoutPage() {
           </p>
         )}
       </section>
+
+      {/* 이용약관 동의 */}
+      <div className="mb-6">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={agreeTerms}
+            onChange={(e) => setAgreeTerms(e.target.checked)}
+            className="mt-0.5 w-4 h-4 accent-black"
+          />
+          <span className="text-sm text-gray-600">
+            {t.checkout.agreeTerms}
+          </span>
+        </label>
+      </div>
 
       {/* 에러 메시지 */}
       {error && (

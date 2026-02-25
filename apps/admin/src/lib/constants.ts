@@ -18,6 +18,9 @@ export const BOARDS_TABLE_ID = 'a64b20b7-800f-42ed-ad78-598a02b37a40'
 export const PAGES_TABLE_ID = 'e1328a21-a403-4523-9473-dd9afc6aa036'
 export const NAVIGATIONS_TABLE_ID = '4bd65ca7-6b4c-4a9d-83c1-70df2ad5ec24'
 export const NAV_ITEMS_TABLE_ID = '585054ff-2c87-42c0-bf5a-dc42c0391bc3'
+export const QNA_TABLE_ID = '51c3cb5c-3c6b-408b-8307-e6c72a756a41'
+export const BANNERS_TABLE_ID = '343e1120-ca71-4449-9900-dfde2610c00d'
+export const PROMOTIONS_TABLE_ID = '0aa6b603-83d2-4805-bad2-c14abea95e2a'
 
 export const SUPPORTED_LANGUAGES: { code: import('./types').SupportedLocale; label: string }[] = [
   { code: 'en', label: 'English' },

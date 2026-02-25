@@ -79,6 +79,8 @@ const en: Translations = {
     noSearchResults: 'No results for "{q}"',
     tryDifferentSearch: 'Try a different search term',
     tryDifferentCategory: 'Try selecting a different category',
+    recentlyViewed: 'Recently Viewed',
+    share: 'Share',
   },
 
   // Reviews
@@ -99,6 +101,7 @@ const en: Translations = {
     reviewCount: '{count} reviews',
     ratingLabel: 'Rating',
     ratingValue: '{rating}/5',
+    addImage: 'Add Image',
   },
 
   // Cart
@@ -182,6 +185,8 @@ const en: Translations = {
     mileageUse: 'Mileage Used',
     totalPayment: 'Total',
     earnEstimate: 'Estimated mileage: {amount}',
+    agreeTerms: 'I confirm the order details and agree to the Terms of Service and Privacy Policy.',
+    agreeRequired: 'Please agree to the terms and conditions.',
   },
 
   // Payment result
@@ -281,6 +286,16 @@ const en: Translations = {
     cancelling: 'Cancelling...',
     cancelFailed: 'Failed to cancel order.',
     cancelConfirm: 'Are you sure you want to cancel this order?',
+
+    // Return/Exchange
+    requestReturn: 'Request Return',
+    requestExchange: 'Request Exchange',
+    returnReasonLabel: 'Please enter the reason',
+    returnReasonPlaceholder: 'Please describe the reason in detail',
+    submitReturn: 'Submit',
+    submittingReturn: 'Submitting...',
+    returnFailed: 'Failed to submit request.',
+    returnReason: 'Reason',
   },
 
   // Order status
@@ -291,6 +306,10 @@ const en: Translations = {
     delivered: 'Delivered',
     cancelled: 'Cancelled',
     refunded: 'Refunded',
+    return_requested: 'Return Requested',
+    return_completed: 'Return Completed',
+    exchange_requested: 'Exchange Requested',
+    exchange_completed: 'Exchange Completed',
   },
 
   // Coupon claim page
@@ -334,6 +353,43 @@ const en: Translations = {
     customerService: 'Customer Service',
     businessInfo: 'Business Info',
     copyright: '© 2024 Shop. All rights reserved.',
+  },
+
+  // Q&A
+  qna: {
+    title: 'Product Q&A',
+    writeQuestion: 'Ask a Question',
+    noQuestions: 'No questions yet',
+    beFirstQuestion: 'Be the first to ask!',
+    questionPlaceholder: 'Ask a question about this product...',
+    submit: 'Submit',
+    loginRequired: 'Please log in to ask a question.',
+    contentRequired: 'Please enter your question.',
+    submitFailed: 'Failed to submit question.',
+    deleteConfirm: 'Delete this question?',
+    answered: 'Answered',
+    waiting: 'Waiting',
+    secret: 'Secret',
+    secretQuestion: 'Mark as secret',
+    answer: 'Answer',
+    questionCount: '{count} questions',
+  },
+
+  // Promotions
+  promotion: {
+    title: 'Time Sale',
+    ongoing: 'Ongoing',
+    ended: 'Ended',
+    upcoming: 'Upcoming',
+    endsIn: 'Ends in',
+    startsIn: 'Starts in',
+    days: 'd',
+    hours: 'h',
+    minutes: 'm',
+    seconds: 's',
+    viewProducts: 'View Products',
+    discountBadge: '{value}% OFF',
+    noPromotions: 'No active promotions',
   },
 
   // 404

@@ -2,15 +2,22 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import { cb } from '@/lib/connectbase'
 import { PAGES_TABLE_ID } from '@/lib/constants'
+import { toPages } from '@/lib/utils'
 import { getAdminSession } from '@/lib/adminAuth'
 import { PageForm } from '@/components/pages/PageForm'
 import type { PageFormData } from '@/components/pages/PageForm'
 
 export const Route = createFileRoute('/pages/new')({
+  loader: async () => {
+    const result = await cb.database.getData(PAGES_TABLE_ID, { limit: 1000 })
+    const slugs = toPages(result.data ?? []).map((p) => p.slug)
+    return { existingSlugs: slugs }
+  },
   component: NewPagePage,
 })
 
 function NewPagePage() {
+  const { existingSlugs } = Route.useLoaderData()
   const navigate = useNavigate()
 
   const handleSubmit = async (data: PageFormData) => {
@@ -38,7 +45,7 @@ function NewPagePage() {
         </Link>
         <h1 className="text-2xl font-bold">페이지 생성</h1>
       </div>
-      <PageForm onSubmit={handleSubmit} submitLabel="생성" />
+      <PageForm onSubmit={handleSubmit} submitLabel="생성" existingSlugs={existingSlugs} />
     </div>
   )
 }

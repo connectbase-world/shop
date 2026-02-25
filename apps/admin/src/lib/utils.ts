@@ -1,4 +1,4 @@
-import type { Product, Order, Profile, Review, MemberRow, Coupon, UserCoupon, MileageHistory, Influencer, Commission, Post, Board, Page, Navigation, NavItem } from './types'
+import type { Product, Order, Profile, Review, MemberRow, Coupon, UserCoupon, MileageHistory, Influencer, Commission, Post, Board, Page, Navigation, NavItem, QnA, Banner, Promotion } from './types'
 
 export function formatPrice(price: number): string {
   return price.toLocaleString('ko-KR') + '원'
@@ -138,6 +138,30 @@ export function toNavItem(row: { id: string; data: Record<string, unknown> }): N
 
 export function toNavItems(rows: { id: string; data: Record<string, unknown> }[]): NavItem[] {
   return rows.map(toNavItem)
+}
+
+export function toQnA(row: { id: string; data: Record<string, unknown> }): QnA {
+  return { id: row.id, ...row.data } as QnA
+}
+
+export function toQnAs(rows: { id: string; data: Record<string, unknown> }[]): QnA[] {
+  return rows.map(toQnA)
+}
+
+export function toBanner(row: { id: string; data: Record<string, unknown> }): Banner {
+  return { id: row.id, ...row.data } as Banner
+}
+
+export function toBanners(rows: { id: string; data: Record<string, unknown> }[]): Banner[] {
+  return rows.map(toBanner)
+}
+
+export function toPromotion(row: { id: string; data: Record<string, unknown> }): Promotion {
+  return { id: row.id, ...row.data } as Promotion
+}
+
+export function toPromotions(rows: { id: string; data: Record<string, unknown> }[]): Promotion[] {
+  return rows.map(toPromotion)
 }
 
 export function formatDate(dateStr: string): string {

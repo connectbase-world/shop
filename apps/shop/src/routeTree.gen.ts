@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PromotionsIndexRouteImport } from './routes/promotions/index'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products/$productId'
 import { Route as PaymentSuccessRouteImport } from './routes/payment/success'
@@ -54,6 +55,11 @@ const CartRoute = CartRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PromotionsIndexRoute = PromotionsIndexRouteImport.update({
+  id: '/promotions/',
+  path: '/promotions/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductsIndexRoute = ProductsIndexRouteImport.update({
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/payment/success': typeof PaymentSuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/': typeof ProductsIndexRoute
+  '/promotions/': typeof PromotionsIndexRoute
   '/boards/$boardSlug/$postId': typeof BoardsBoardSlugPostIdRoute
   '/boards/$boardSlug/new': typeof BoardsBoardSlugNewRoute
   '/boards/$boardSlug/': typeof BoardsBoardSlugIndexRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/payment/success': typeof PaymentSuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products': typeof ProductsIndexRoute
+  '/promotions': typeof PromotionsIndexRoute
   '/boards/$boardSlug/$postId': typeof BoardsBoardSlugPostIdRoute
   '/boards/$boardSlug/new': typeof BoardsBoardSlugNewRoute
   '/boards/$boardSlug': typeof BoardsBoardSlugIndexRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/payment/success': typeof PaymentSuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/': typeof ProductsIndexRoute
+  '/promotions/': typeof PromotionsIndexRoute
   '/boards/$boardSlug/$postId': typeof BoardsBoardSlugPostIdRoute
   '/boards/$boardSlug/new': typeof BoardsBoardSlugNewRoute
   '/boards/$boardSlug/': typeof BoardsBoardSlugIndexRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/payment/success'
     | '/products/$productId'
     | '/products/'
+    | '/promotions/'
     | '/boards/$boardSlug/$postId'
     | '/boards/$boardSlug/new'
     | '/boards/$boardSlug/'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/payment/success'
     | '/products/$productId'
     | '/products'
+    | '/promotions'
     | '/boards/$boardSlug/$postId'
     | '/boards/$boardSlug/new'
     | '/boards/$boardSlug'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/payment/success'
     | '/products/$productId'
     | '/products/'
+    | '/promotions/'
     | '/boards/$boardSlug/$postId'
     | '/boards/$boardSlug/new'
     | '/boards/$boardSlug/'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   PaymentSuccessRoute: typeof PaymentSuccessRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
+  PromotionsIndexRoute: typeof PromotionsIndexRoute
   BoardsBoardSlugPostIdRoute: typeof BoardsBoardSlugPostIdRoute
   BoardsBoardSlugNewRoute: typeof BoardsBoardSlugNewRoute
   BoardsBoardSlugIndexRoute: typeof BoardsBoardSlugIndexRoute
@@ -280,6 +293,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/promotions/': {
+      id: '/promotions/'
+      path: '/promotions'
+      fullPath: '/promotions/'
+      preLoaderRoute: typeof PromotionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/products/': {
@@ -369,6 +389,7 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentSuccessRoute: PaymentSuccessRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
   ProductsIndexRoute: ProductsIndexRoute,
+  PromotionsIndexRoute: PromotionsIndexRoute,
   BoardsBoardSlugPostIdRoute: BoardsBoardSlugPostIdRoute,
   BoardsBoardSlugNewRoute: BoardsBoardSlugNewRoute,
   BoardsBoardSlugIndexRoute: BoardsBoardSlugIndexRoute,

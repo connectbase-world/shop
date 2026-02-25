@@ -1,18 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
-import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, FileText, StickyNote, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, FileText, StickyNote, ShoppingBag, ExternalLink, Settings } from 'lucide-react'
 import { cb } from '@/lib/connectbase'
-import { NAVIGATIONS_TABLE_ID, NAV_ITEMS_TABLE_ID, BOARDS_TABLE_ID, PAGES_TABLE_ID } from '@/lib/constants'
-import { toNavigation, toNavItems, toBoards, toPages } from '@/lib/utils'
-import type { NavItem, Board, Page } from '@/lib/types'
+import { NAVIGATIONS_TABLE_ID, NAV_ITEMS_TABLE_ID, BOARDS_TABLE_ID, PAGES_TABLE_ID, PRODUCTS_TABLE_ID } from '@/lib/constants'
+import { toNavigation, toNavItems, toBoards, toPages, toProducts } from '@/lib/utils'
+import type { NavItem } from '@/lib/types'
 
 export const Route = createFileRoute('/navigations/$navId')({
   loader: async ({ params }) => {
-    const [navRes, itemsRes, boardsRes, pagesRes] = await Promise.all([
+    const [navRes, itemsRes, boardsRes, pagesRes, productsRes] = await Promise.all([
       cb.database.getData(NAVIGATIONS_TABLE_ID, { limit: 1000 }),
       cb.database.getData(NAV_ITEMS_TABLE_ID, { limit: 1000 }),
       cb.database.getData(BOARDS_TABLE_ID, { limit: 1000 }),
       cb.database.getData(PAGES_TABLE_ID, { limit: 1000 }),
+      cb.database.getData(PRODUCTS_TABLE_ID, { limit: 1000 }),
     ])
     const navRow = (navRes.data ?? []).find((r: { id: string }) => r.id === params.navId)
     if (!navRow) throw new Error('네비게이션을 찾을 수 없습니다.')
@@ -22,21 +23,29 @@ export const Route = createFileRoute('/navigations/$navId')({
       .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
     const boards = toBoards(boardsRes.data ?? []).filter((b) => b.is_active)
     const pages = toPages(pagesRes.data ?? []).filter((p) => p.is_published)
-    return { navigation, items, boards, pages }
+    const products = toProducts(productsRes.data ?? [])
+    return { navigation, items, boards, pages, products }
   },
   component: NavigationDetailPage,
 })
 
 function NavigationDetailPage() {
-  const { navigation, items, boards, pages } = Route.useLoaderData()
+  const { navigation, items: serverItems, boards, pages, products } = Route.useLoaderData()
   const router = useRouter()
 
+  const [localItems, setLocalItems] = useState(serverItems)
+  const items = localItems
+
+  // 서버 데이터가 바뀌면 로컬 상태 동기화
+  useEffect(() => { setLocalItems(serverItems) }, [serverItems])
+
   const [editName, setEditName] = useState(navigation.name)
-  const [editSlug, setEditSlug] = useState(navigation.slug)
   const [editActive, setEditActive] = useState(navigation.is_active)
   const [savingMeta, setSavingMeta] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [moving, setMoving] = useState(false)
 
-  const [addType, setAddType] = useState<'board' | 'page' | 'link'>('board')
+  const [addType, setAddType] = useState<'board' | 'page' | 'product' | 'link'>('board')
   const [addTargetId, setAddTargetId] = useState('')
   const [addLabel, setAddLabel] = useState('')
   const [addUrl, setAddUrl] = useState('')
@@ -44,11 +53,16 @@ function NavigationDetailPage() {
   const [showAddForm, setShowAddForm] = useState(false)
 
   const handleSaveMeta = async () => {
-    if (!editName.trim() || !editSlug.trim()) return
+    if (!editName.trim()) return
     setSavingMeta(true)
     try {
       await cb.database.updateData(NAVIGATIONS_TABLE_ID, navigation.id, {
-        data: { name: editName, slug: editSlug, is_active: editActive },
+        data: {
+          name: editName,
+          slug: navigation.slug,
+          is_active: editActive,
+          created_at: navigation.created_at,
+        },
       })
       router.invalidate()
     } finally {
@@ -90,15 +104,51 @@ function NavigationDetailPage() {
   }
 
   const handleMoveItem = async (item: NavItem, direction: 'up' | 'down') => {
+    if (moving) return
     const idx = items.findIndex((i) => i.id === item.id)
     const swapIdx = direction === 'up' ? idx - 1 : idx + 1
     if (swapIdx < 0 || swapIdx >= items.length) return
-    const other = items[swapIdx]
-    await Promise.all([
-      cb.database.updateData(NAV_ITEMS_TABLE_ID, item.id, { data: { sort_order: other.sort_order } }),
-      cb.database.updateData(NAV_ITEMS_TABLE_ID, other.id, { data: { sort_order: item.sort_order } }),
-    ])
-    router.invalidate()
+
+    const itemA = items[idx]
+    const itemB = items[swapIdx]
+
+    // Optimistic UI: 즉시 화면 반영
+    const reordered = [...items]
+    reordered[idx] = itemB
+    reordered[swapIdx] = itemA
+    setLocalItems(reordered)
+
+    // 서버에 2개만 스왑 (백그라운드)
+    setMoving(true)
+    try {
+      await Promise.all([
+        cb.database.updateData(NAV_ITEMS_TABLE_ID, itemA.id, {
+          data: {
+            navigation_id: itemA.navigation_id,
+            type: itemA.type,
+            target_id: itemA.target_id,
+            label: itemA.label,
+            url: itemA.url,
+            sort_order: swapIdx,
+          },
+        }),
+        cb.database.updateData(NAV_ITEMS_TABLE_ID, itemB.id, {
+          data: {
+            navigation_id: itemB.navigation_id,
+            type: itemB.type,
+            target_id: itemB.target_id,
+            label: itemB.label,
+            url: itemB.url,
+            sort_order: idx,
+          },
+        }),
+      ])
+    } catch {
+      // 실패 시 롤백
+      setLocalItems(items)
+    } finally {
+      setMoving(false)
+    }
   }
 
   const handleSelectTarget = (targetId: string) => {
@@ -109,29 +159,43 @@ function NavigationDetailPage() {
     } else if (addType === 'page') {
       const page = pages.find((p) => p.id === targetId)
       if (page && !addLabel) setAddLabel(page.title)
+    } else if (addType === 'product') {
+      if (targetId === '__all__') {
+        if (!addLabel) setAddLabel('전체 상품')
+      } else {
+        const product = products.find((p) => p.id === targetId)
+        if (product && !addLabel) setAddLabel(product.name)
+      }
     }
   }
 
   const typeIcon = (type: string) => {
     if (type === 'board') return <FileText className="w-3.5 h-3.5" />
     if (type === 'page') return <StickyNote className="w-3.5 h-3.5" />
+    if (type === 'product') return <ShoppingBag className="w-3.5 h-3.5" />
     return <ExternalLink className="w-3.5 h-3.5" />
   }
 
   const typeLabel = (type: string) => {
     if (type === 'board') return '게시판'
     if (type === 'page') return '페이지'
+    if (type === 'product') return '상품'
     return '링크'
   }
 
   const resolveTarget = (item: NavItem): string => {
     if (item.type === 'board') {
       const board = boards.find((b) => b.id === item.target_id)
-      return board ? `/boards/${board.slug}` : '(삭제됨)'
+      return board ? board.name : '(삭제됨)'
     }
     if (item.type === 'page') {
       const page = pages.find((p) => p.id === item.target_id)
-      return page ? `/p/${page.slug}` : '(삭제됨)'
+      return page ? page.title : '(삭제됨)'
+    }
+    if (item.type === 'product') {
+      if (item.target_id === '__all__') return '전체 상품'
+      const product = products.find((p) => p.id === item.target_id)
+      return product ? product.name : '(삭제됨)'
     }
     return item.url || ''
   }
@@ -148,55 +212,15 @@ function NavigationDetailPage() {
         <h1 className="text-2xl font-bold">{navigation.name}</h1>
       </div>
 
-      {/* 네비게이션 기본 정보 */}
-      <div className="p-4 bg-gray-50 rounded-lg mb-6 space-y-3">
-        <p className="text-sm font-medium">기본 설정</p>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">이름</label>
-            <input
-              type="text"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              className="w-full px-3 py-1.5 border border-gray-200 rounded-md text-sm outline-none focus:border-gray-400"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">슬러그</label>
-            <input
-              type="text"
-              value={editSlug}
-              onChange={(e) => setEditSlug(e.target.value)}
-              className="w-full px-3 py-1.5 border border-gray-200 rounded-md text-sm outline-none focus:border-gray-400"
-            />
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={editActive}
-              onChange={(e) => setEditActive(e.target.checked)}
-              className="rounded"
-            />
-            활성화
-          </label>
-          <button
-            onClick={handleSaveMeta}
-            disabled={savingMeta}
-            className="px-4 py-1.5 bg-gray-900 text-white text-sm rounded-md hover:bg-gray-800 disabled:opacity-50"
-          >
-            {savingMeta ? '저장 중...' : '설정 저장'}
-          </button>
-        </div>
-      </div>
-
-      {/* 아이템 목록 */}
+      {/* 메뉴 아이템 — 메인 영역 */}
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-bold">메뉴 아이템</h2>
+        <div>
+          <h2 className="text-lg font-bold">메뉴 아이템</h2>
+          <p className="text-xs text-gray-400 mt-0.5">이 네비게이션에 포함할 게시판, 페이지, 상품, 링크를 추가하세요</p>
+        </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 rounded-md hover:bg-gray-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-900 text-white rounded-md hover:bg-gray-800"
         >
           <Plus className="w-4 h-4" />
           아이템 추가
@@ -222,6 +246,13 @@ function NavigationDetailPage() {
             </button>
             <button
               type="button"
+              onClick={() => { setAddType('product'); setAddTargetId(''); setAddLabel('') }}
+              className={`px-3 py-1.5 text-xs rounded-md ${addType === 'product' ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200'}`}
+            >
+              상품
+            </button>
+            <button
+              type="button"
               onClick={() => { setAddType('link'); setAddTargetId(''); setAddLabel('') }}
               className={`px-3 py-1.5 text-xs rounded-md ${addType === 'link' ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200'}`}
             >
@@ -239,7 +270,7 @@ function NavigationDetailPage() {
               >
                 <option value="">선택하세요</option>
                 {boards.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name} ({b.slug})</option>
+                  <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </select>
             </div>
@@ -255,7 +286,24 @@ function NavigationDetailPage() {
               >
                 <option value="">선택하세요</option>
                 {pages.map((p) => (
-                  <option key={p.id} value={p.id}>{p.title} ({p.slug})</option>
+                  <option key={p.id} value={p.id}>{p.title}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {addType === 'product' && (
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">상품 선택</label>
+              <select
+                value={addTargetId}
+                onChange={(e) => handleSelectTarget(e.target.value)}
+                className="w-full px-3 py-1.5 border border-gray-200 rounded-md text-sm outline-none bg-white"
+              >
+                <option value="">선택하세요</option>
+                <option value="__all__">전체 상품 (상품 목록 페이지)</option>
+                {products.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
             </div>
@@ -308,7 +356,7 @@ function NavigationDetailPage() {
 
       {items.length === 0 ? (
         <div className="text-center py-12 text-gray-400 text-sm border border-dashed border-gray-200 rounded-lg">
-          아이템이 없습니다. 게시판, 페이지 또는 커스텀 링크를 추가해보세요.
+          아이템이 없습니다. 위의 &quot;아이템 추가&quot; 버튼으로 게시판, 페이지, 링크를 추가하세요.
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -317,17 +365,17 @@ function NavigationDetailPage() {
               <div className="flex flex-col gap-0.5">
                 <button
                   onClick={() => handleMoveItem(item, 'up')}
-                  disabled={idx === 0}
-                  className="p-0.5 text-gray-300 hover:text-gray-600 disabled:opacity-30"
+                  disabled={idx === 0 || moving}
+                  className="p-1 text-gray-400 hover:text-gray-800 hover:bg-gray-200 rounded disabled:opacity-20 disabled:hover:bg-transparent"
                 >
-                  <ChevronUp className="w-3.5 h-3.5" />
+                  <ChevronUp className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleMoveItem(item, 'down')}
-                  disabled={idx === items.length - 1}
-                  className="p-0.5 text-gray-300 hover:text-gray-600 disabled:opacity-30"
+                  disabled={idx === items.length - 1 || moving}
+                  className="p-1 text-gray-400 hover:text-gray-800 hover:bg-gray-200 rounded disabled:opacity-20 disabled:hover:bg-transparent"
                 >
-                  <ChevronDown className="w-3.5 h-3.5" />
+                  <ChevronDown className="w-4 h-4" />
                 </button>
               </div>
               <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded shrink-0">
@@ -349,9 +397,47 @@ function NavigationDetailPage() {
         </div>
       )}
 
-      <p className="text-xs text-gray-400 mt-3">
-        Shop에서 슬러그 <code className="bg-gray-100 px-1 rounded">{navigation.slug}</code>로 이 네비게이션을 참조합니다.
-      </p>
+      {/* 기본 설정 — 하단 접힘 영역 */}
+      <div className="mt-8">
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
+        >
+          <Settings className="w-4 h-4" />
+          {showSettings ? '설정 닫기' : '네비게이션 설정'}
+        </button>
+        {showSettings && (
+          <div className="mt-3 p-4 bg-gray-50 rounded-lg space-y-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">이름</label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full max-w-xs px-3 py-1.5 border border-gray-200 rounded-md text-sm outline-none focus:border-gray-400"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={editActive}
+                  onChange={(e) => setEditActive(e.target.checked)}
+                  className="rounded"
+                />
+                활성화
+              </label>
+              <button
+                onClick={handleSaveMeta}
+                disabled={savingMeta}
+                className="px-4 py-1.5 bg-gray-900 text-white text-sm rounded-md hover:bg-gray-800 disabled:opacity-50"
+              >
+                {savingMeta ? '저장 중...' : '설정 저장'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

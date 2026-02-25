@@ -31,13 +31,20 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
 
       <div className="flex-1 flex flex-col justify-between min-w-0">
         <div className="flex justify-between gap-2">
-          <Link
-            to="/products/$productId"
-            params={{ productId: item.productId }}
-            className="text-sm font-medium truncate hover:underline"
-          >
-            {localizedName}
-          </Link>
+          <div className="min-w-0">
+            <Link
+              to="/products/$productId"
+              params={{ productId: item.productId }}
+              className="text-sm font-medium truncate hover:underline block"
+            >
+              {localizedName}
+            </Link>
+            {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
+              <p className="text-xs text-gray-400 mt-0.5 truncate">
+                {Object.entries(item.selectedOptions).map(([k, v]) => `${k}: ${v}`).join(' / ')}
+              </p>
+            )}
+          </div>
           <button
             className="shrink-0 p-1 text-gray-400 hover:text-gray-900 transition-colors"
             onClick={onRemove}

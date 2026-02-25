@@ -2,14 +2,21 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import { cb } from '@/lib/connectbase'
 import { BOARDS_TABLE_ID } from '@/lib/constants'
+import { toBoards } from '@/lib/utils'
 import { BoardForm } from '@/components/boards/BoardForm'
 import type { BoardFormData } from '@/components/boards/BoardForm'
 
 export const Route = createFileRoute('/boards/new')({
+  loader: async () => {
+    const result = await cb.database.getData(BOARDS_TABLE_ID, { limit: 1000 })
+    const slugs = toBoards(result.data ?? []).map((b) => b.slug)
+    return { existingSlugs: slugs }
+  },
   component: NewBoardPage,
 })
 
 function NewBoardPage() {
+  const { existingSlugs } = Route.useLoaderData()
   const navigate = useNavigate()
 
   const handleSubmit = async (data: BoardFormData) => {
@@ -30,7 +37,7 @@ function NewBoardPage() {
         </Link>
         <h1 className="text-2xl font-bold">게시판 생성</h1>
       </div>
-      <BoardForm onSubmit={handleSubmit} submitLabel="생성" />
+      <BoardForm onSubmit={handleSubmit} submitLabel="생성" existingSlugs={existingSlugs} />
     </div>
   )
 }

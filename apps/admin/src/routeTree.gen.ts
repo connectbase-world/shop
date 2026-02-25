@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as QnaIndexRouteImport } from './routes/qna/index'
+import { Route as PromotionsIndexRouteImport } from './routes/promotions/index'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as PagesIndexRouteImport } from './routes/pages/index'
 import { Route as OrdersIndexRouteImport } from './routes/orders/index'
@@ -19,17 +21,22 @@ import { Route as MembersIndexRouteImport } from './routes/members/index'
 import { Route as InfluencersIndexRouteImport } from './routes/influencers/index'
 import { Route as CouponsIndexRouteImport } from './routes/coupons/index'
 import { Route as BoardsIndexRouteImport } from './routes/boards/index'
+import { Route as BannersIndexRouteImport } from './routes/banners/index'
+import { Route as PromotionsNewRouteImport } from './routes/promotions/new'
 import { Route as ProductsNewRouteImport } from './routes/products/new'
 import { Route as PagesNewRouteImport } from './routes/pages/new'
 import { Route as NavigationsNavIdRouteImport } from './routes/navigations/$navId'
 import { Route as CouponsNewRouteImport } from './routes/coupons/new'
 import { Route as BoardsNewRouteImport } from './routes/boards/new'
+import { Route as BannersNewRouteImport } from './routes/banners/new'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as BoardsBoardIdIndexRouteImport } from './routes/boards/$boardId/index'
+import { Route as PromotionsPromotionIdEditRouteImport } from './routes/promotions/$promotionId.edit'
 import { Route as ProductsProductIdEditRouteImport } from './routes/products/$productId.edit'
 import { Route as PagesPageIdEditRouteImport } from './routes/pages/$pageId.edit'
 import { Route as CouponsCouponIdEditRouteImport } from './routes/coupons/$couponId.edit'
 import { Route as BoardsBoardIdEditRouteImport } from './routes/boards/$boardId/edit'
+import { Route as BannersBannerIdEditRouteImport } from './routes/banners/$bannerId.edit'
 import { Route as BoardsBoardIdPostsNewRouteImport } from './routes/boards/$boardId/posts/new'
 import { Route as BoardsBoardIdPostsPostIdEditRouteImport } from './routes/boards/$boardId/posts/$postId/edit'
 
@@ -41,6 +48,16 @@ const IndexRoute = IndexRouteImport.update({
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QnaIndexRoute = QnaIndexRouteImport.update({
+  id: '/qna/',
+  path: '/qna/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PromotionsIndexRoute = PromotionsIndexRouteImport.update({
+  id: '/promotions/',
+  path: '/promotions/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductsIndexRoute = ProductsIndexRouteImport.update({
@@ -83,6 +100,16 @@ const BoardsIndexRoute = BoardsIndexRouteImport.update({
   path: '/boards/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BannersIndexRoute = BannersIndexRouteImport.update({
+  id: '/banners/',
+  path: '/banners/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PromotionsNewRoute = PromotionsNewRouteImport.update({
+  id: '/promotions/new',
+  path: '/promotions/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsNewRoute = ProductsNewRouteImport.update({
   id: '/products/new',
   path: '/products/new',
@@ -108,6 +135,11 @@ const BoardsNewRoute = BoardsNewRouteImport.update({
   path: '/boards/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BannersNewRoute = BannersNewRouteImport.update({
+  id: '/banners/new',
+  path: '/banners/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -118,6 +150,12 @@ const BoardsBoardIdIndexRoute = BoardsBoardIdIndexRouteImport.update({
   path: '/boards/$boardId/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PromotionsPromotionIdEditRoute =
+  PromotionsPromotionIdEditRouteImport.update({
+    id: '/promotions/$promotionId/edit',
+    path: '/promotions/$promotionId/edit',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ProductsProductIdEditRoute = ProductsProductIdEditRouteImport.update({
   id: '/products/$productId/edit',
   path: '/products/$productId/edit',
@@ -138,6 +176,11 @@ const BoardsBoardIdEditRoute = BoardsBoardIdEditRouteImport.update({
   path: '/boards/$boardId/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BannersBannerIdEditRoute = BannersBannerIdEditRouteImport.update({
+  id: '/banners/$bannerId/edit',
+  path: '/banners/$bannerId/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BoardsBoardIdPostsNewRoute = BoardsBoardIdPostsNewRouteImport.update({
   id: '/boards/$boardId/posts/new',
   path: '/boards/$boardId/posts/new',
@@ -153,11 +196,14 @@ const BoardsBoardIdPostsPostIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/banners/new': typeof BannersNewRoute
   '/boards/new': typeof BoardsNewRoute
   '/coupons/new': typeof CouponsNewRoute
   '/navigations/$navId': typeof NavigationsNavIdRoute
   '/pages/new': typeof PagesNewRoute
   '/products/new': typeof ProductsNewRoute
+  '/promotions/new': typeof PromotionsNewRoute
+  '/banners/': typeof BannersIndexRoute
   '/boards/': typeof BoardsIndexRoute
   '/coupons/': typeof CouponsIndexRoute
   '/influencers/': typeof InfluencersIndexRoute
@@ -166,11 +212,15 @@ export interface FileRoutesByFullPath {
   '/orders/': typeof OrdersIndexRoute
   '/pages/': typeof PagesIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/promotions/': typeof PromotionsIndexRoute
+  '/qna/': typeof QnaIndexRoute
   '/settings/': typeof SettingsIndexRoute
+  '/banners/$bannerId/edit': typeof BannersBannerIdEditRoute
   '/boards/$boardId/edit': typeof BoardsBoardIdEditRoute
   '/coupons/$couponId/edit': typeof CouponsCouponIdEditRoute
   '/pages/$pageId/edit': typeof PagesPageIdEditRoute
   '/products/$productId/edit': typeof ProductsProductIdEditRoute
+  '/promotions/$promotionId/edit': typeof PromotionsPromotionIdEditRoute
   '/boards/$boardId/': typeof BoardsBoardIdIndexRoute
   '/boards/$boardId/posts/new': typeof BoardsBoardIdPostsNewRoute
   '/boards/$boardId/posts/$postId/edit': typeof BoardsBoardIdPostsPostIdEditRoute
@@ -178,11 +228,14 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/banners/new': typeof BannersNewRoute
   '/boards/new': typeof BoardsNewRoute
   '/coupons/new': typeof CouponsNewRoute
   '/navigations/$navId': typeof NavigationsNavIdRoute
   '/pages/new': typeof PagesNewRoute
   '/products/new': typeof ProductsNewRoute
+  '/promotions/new': typeof PromotionsNewRoute
+  '/banners': typeof BannersIndexRoute
   '/boards': typeof BoardsIndexRoute
   '/coupons': typeof CouponsIndexRoute
   '/influencers': typeof InfluencersIndexRoute
@@ -191,11 +244,15 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersIndexRoute
   '/pages': typeof PagesIndexRoute
   '/products': typeof ProductsIndexRoute
+  '/promotions': typeof PromotionsIndexRoute
+  '/qna': typeof QnaIndexRoute
   '/settings': typeof SettingsIndexRoute
+  '/banners/$bannerId/edit': typeof BannersBannerIdEditRoute
   '/boards/$boardId/edit': typeof BoardsBoardIdEditRoute
   '/coupons/$couponId/edit': typeof CouponsCouponIdEditRoute
   '/pages/$pageId/edit': typeof PagesPageIdEditRoute
   '/products/$productId/edit': typeof ProductsProductIdEditRoute
+  '/promotions/$promotionId/edit': typeof PromotionsPromotionIdEditRoute
   '/boards/$boardId': typeof BoardsBoardIdIndexRoute
   '/boards/$boardId/posts/new': typeof BoardsBoardIdPostsNewRoute
   '/boards/$boardId/posts/$postId/edit': typeof BoardsBoardIdPostsPostIdEditRoute
@@ -204,11 +261,14 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/banners/new': typeof BannersNewRoute
   '/boards/new': typeof BoardsNewRoute
   '/coupons/new': typeof CouponsNewRoute
   '/navigations/$navId': typeof NavigationsNavIdRoute
   '/pages/new': typeof PagesNewRoute
   '/products/new': typeof ProductsNewRoute
+  '/promotions/new': typeof PromotionsNewRoute
+  '/banners/': typeof BannersIndexRoute
   '/boards/': typeof BoardsIndexRoute
   '/coupons/': typeof CouponsIndexRoute
   '/influencers/': typeof InfluencersIndexRoute
@@ -217,11 +277,15 @@ export interface FileRoutesById {
   '/orders/': typeof OrdersIndexRoute
   '/pages/': typeof PagesIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/promotions/': typeof PromotionsIndexRoute
+  '/qna/': typeof QnaIndexRoute
   '/settings/': typeof SettingsIndexRoute
+  '/banners/$bannerId/edit': typeof BannersBannerIdEditRoute
   '/boards/$boardId/edit': typeof BoardsBoardIdEditRoute
   '/coupons/$couponId/edit': typeof CouponsCouponIdEditRoute
   '/pages/$pageId/edit': typeof PagesPageIdEditRoute
   '/products/$productId/edit': typeof ProductsProductIdEditRoute
+  '/promotions/$promotionId/edit': typeof PromotionsPromotionIdEditRoute
   '/boards/$boardId/': typeof BoardsBoardIdIndexRoute
   '/boards/$boardId/posts/new': typeof BoardsBoardIdPostsNewRoute
   '/boards/$boardId/posts/$postId/edit': typeof BoardsBoardIdPostsPostIdEditRoute
@@ -231,11 +295,14 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth/callback'
+    | '/banners/new'
     | '/boards/new'
     | '/coupons/new'
     | '/navigations/$navId'
     | '/pages/new'
     | '/products/new'
+    | '/promotions/new'
+    | '/banners/'
     | '/boards/'
     | '/coupons/'
     | '/influencers/'
@@ -244,11 +311,15 @@ export interface FileRouteTypes {
     | '/orders/'
     | '/pages/'
     | '/products/'
+    | '/promotions/'
+    | '/qna/'
     | '/settings/'
+    | '/banners/$bannerId/edit'
     | '/boards/$boardId/edit'
     | '/coupons/$couponId/edit'
     | '/pages/$pageId/edit'
     | '/products/$productId/edit'
+    | '/promotions/$promotionId/edit'
     | '/boards/$boardId/'
     | '/boards/$boardId/posts/new'
     | '/boards/$boardId/posts/$postId/edit'
@@ -256,11 +327,14 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth/callback'
+    | '/banners/new'
     | '/boards/new'
     | '/coupons/new'
     | '/navigations/$navId'
     | '/pages/new'
     | '/products/new'
+    | '/promotions/new'
+    | '/banners'
     | '/boards'
     | '/coupons'
     | '/influencers'
@@ -269,11 +343,15 @@ export interface FileRouteTypes {
     | '/orders'
     | '/pages'
     | '/products'
+    | '/promotions'
+    | '/qna'
     | '/settings'
+    | '/banners/$bannerId/edit'
     | '/boards/$boardId/edit'
     | '/coupons/$couponId/edit'
     | '/pages/$pageId/edit'
     | '/products/$productId/edit'
+    | '/promotions/$promotionId/edit'
     | '/boards/$boardId'
     | '/boards/$boardId/posts/new'
     | '/boards/$boardId/posts/$postId/edit'
@@ -281,11 +359,14 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth/callback'
+    | '/banners/new'
     | '/boards/new'
     | '/coupons/new'
     | '/navigations/$navId'
     | '/pages/new'
     | '/products/new'
+    | '/promotions/new'
+    | '/banners/'
     | '/boards/'
     | '/coupons/'
     | '/influencers/'
@@ -294,11 +375,15 @@ export interface FileRouteTypes {
     | '/orders/'
     | '/pages/'
     | '/products/'
+    | '/promotions/'
+    | '/qna/'
     | '/settings/'
+    | '/banners/$bannerId/edit'
     | '/boards/$boardId/edit'
     | '/coupons/$couponId/edit'
     | '/pages/$pageId/edit'
     | '/products/$productId/edit'
+    | '/promotions/$promotionId/edit'
     | '/boards/$boardId/'
     | '/boards/$boardId/posts/new'
     | '/boards/$boardId/posts/$postId/edit'
@@ -307,11 +392,14 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  BannersNewRoute: typeof BannersNewRoute
   BoardsNewRoute: typeof BoardsNewRoute
   CouponsNewRoute: typeof CouponsNewRoute
   NavigationsNavIdRoute: typeof NavigationsNavIdRoute
   PagesNewRoute: typeof PagesNewRoute
   ProductsNewRoute: typeof ProductsNewRoute
+  PromotionsNewRoute: typeof PromotionsNewRoute
+  BannersIndexRoute: typeof BannersIndexRoute
   BoardsIndexRoute: typeof BoardsIndexRoute
   CouponsIndexRoute: typeof CouponsIndexRoute
   InfluencersIndexRoute: typeof InfluencersIndexRoute
@@ -320,11 +408,15 @@ export interface RootRouteChildren {
   OrdersIndexRoute: typeof OrdersIndexRoute
   PagesIndexRoute: typeof PagesIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
+  PromotionsIndexRoute: typeof PromotionsIndexRoute
+  QnaIndexRoute: typeof QnaIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
+  BannersBannerIdEditRoute: typeof BannersBannerIdEditRoute
   BoardsBoardIdEditRoute: typeof BoardsBoardIdEditRoute
   CouponsCouponIdEditRoute: typeof CouponsCouponIdEditRoute
   PagesPageIdEditRoute: typeof PagesPageIdEditRoute
   ProductsProductIdEditRoute: typeof ProductsProductIdEditRoute
+  PromotionsPromotionIdEditRoute: typeof PromotionsPromotionIdEditRoute
   BoardsBoardIdIndexRoute: typeof BoardsBoardIdIndexRoute
   BoardsBoardIdPostsNewRoute: typeof BoardsBoardIdPostsNewRoute
   BoardsBoardIdPostsPostIdEditRoute: typeof BoardsBoardIdPostsPostIdEditRoute
@@ -344,6 +436,20 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings/'
       preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qna/': {
+      id: '/qna/'
+      path: '/qna'
+      fullPath: '/qna/'
+      preLoaderRoute: typeof QnaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/promotions/': {
+      id: '/promotions/'
+      path: '/promotions'
+      fullPath: '/promotions/'
+      preLoaderRoute: typeof PromotionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/products/': {
@@ -402,6 +508,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BoardsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/banners/': {
+      id: '/banners/'
+      path: '/banners'
+      fullPath: '/banners/'
+      preLoaderRoute: typeof BannersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/promotions/new': {
+      id: '/promotions/new'
+      path: '/promotions/new'
+      fullPath: '/promotions/new'
+      preLoaderRoute: typeof PromotionsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/new': {
       id: '/products/new'
       path: '/products/new'
@@ -437,6 +557,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BoardsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/banners/new': {
+      id: '/banners/new'
+      path: '/banners/new'
+      fullPath: '/banners/new'
+      preLoaderRoute: typeof BannersNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -449,6 +576,13 @@ declare module '@tanstack/react-router' {
       path: '/boards/$boardId'
       fullPath: '/boards/$boardId/'
       preLoaderRoute: typeof BoardsBoardIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/promotions/$promotionId/edit': {
+      id: '/promotions/$promotionId/edit'
+      path: '/promotions/$promotionId/edit'
+      fullPath: '/promotions/$promotionId/edit'
+      preLoaderRoute: typeof PromotionsPromotionIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/products/$productId/edit': {
@@ -479,6 +613,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BoardsBoardIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/banners/$bannerId/edit': {
+      id: '/banners/$bannerId/edit'
+      path: '/banners/$bannerId/edit'
+      fullPath: '/banners/$bannerId/edit'
+      preLoaderRoute: typeof BannersBannerIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/boards/$boardId/posts/new': {
       id: '/boards/$boardId/posts/new'
       path: '/boards/$boardId/posts/new'
@@ -499,11 +640,14 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  BannersNewRoute: BannersNewRoute,
   BoardsNewRoute: BoardsNewRoute,
   CouponsNewRoute: CouponsNewRoute,
   NavigationsNavIdRoute: NavigationsNavIdRoute,
   PagesNewRoute: PagesNewRoute,
   ProductsNewRoute: ProductsNewRoute,
+  PromotionsNewRoute: PromotionsNewRoute,
+  BannersIndexRoute: BannersIndexRoute,
   BoardsIndexRoute: BoardsIndexRoute,
   CouponsIndexRoute: CouponsIndexRoute,
   InfluencersIndexRoute: InfluencersIndexRoute,
@@ -512,11 +656,15 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersIndexRoute: OrdersIndexRoute,
   PagesIndexRoute: PagesIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
+  PromotionsIndexRoute: PromotionsIndexRoute,
+  QnaIndexRoute: QnaIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
+  BannersBannerIdEditRoute: BannersBannerIdEditRoute,
   BoardsBoardIdEditRoute: BoardsBoardIdEditRoute,
   CouponsCouponIdEditRoute: CouponsCouponIdEditRoute,
   PagesPageIdEditRoute: PagesPageIdEditRoute,
   ProductsProductIdEditRoute: ProductsProductIdEditRoute,
+  PromotionsPromotionIdEditRoute: PromotionsPromotionIdEditRoute,
   BoardsBoardIdIndexRoute: BoardsBoardIdIndexRoute,
   BoardsBoardIdPostsNewRoute: BoardsBoardIdPostsNewRoute,
   BoardsBoardIdPostsPostIdEditRoute: BoardsBoardIdPostsPostIdEditRoute,

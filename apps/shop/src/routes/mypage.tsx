@@ -20,6 +20,10 @@ function getStatusBadge(status: string, t: { orderStatus: Record<string, string>
     delivered: 'bg-green-50 text-green-700',
     cancelled: 'bg-red-50 text-red-700',
     refunded: 'bg-gray-100 text-gray-600',
+    return_requested: 'bg-orange-50 text-orange-700',
+    return_completed: 'bg-gray-100 text-gray-600',
+    exchange_requested: 'bg-teal-50 text-teal-700',
+    exchange_completed: 'bg-emerald-50 text-emerald-700',
   }
   return {
     label: (t.orderStatus as Record<string, string>)[status] || status,
@@ -643,6 +647,32 @@ function MyPage() {
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [returnModal, setReturnModal] = useState<{ order: Order; type: 'return' | 'exchange' } | null>(null)
+  const [returnReason, setReturnReason] = useState('')
+  const [submittingReturn, setSubmittingReturn] = useState(false)
+
+  const handleReturnRequest = async () => {
+    if (!returnModal || !returnReason.trim()) return
+    setSubmittingReturn(true)
+    const newStatus = returnModal.type === 'return' ? 'return_requested' : 'exchange_requested'
+    try {
+      await cb.database.updateData(ORDERS_TABLE_ID, returnModal.order.id, {
+        data: { status: newStatus, return_reason: returnReason.trim() },
+      })
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === returnModal.order.id
+            ? { ...o, status: newStatus, return_reason: returnReason.trim() }
+            : o,
+        ),
+      )
+      setReturnModal(null)
+      setReturnReason('')
+    } catch {
+      alert(t.mypage.returnFailed)
+    }
+    setSubmittingReturn(false)
+  }
 
   const handleCancelOrder = async (order: Order) => {
     if (!confirm(t.mypage.cancelConfirm)) return
@@ -806,6 +836,11 @@ function MyPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm truncate">{item.name}</p>
+                            {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
+                              <p className="text-xs text-gray-400 truncate">
+                                {Object.entries(item.selectedOptions).map(([k, v]) => `${k}: ${v}`).join(' / ')}
+                              </p>
+                            )}
                             <p className="text-xs text-gray-500">
                               {formatPrice(item.price)} x {item.quantity}
                             </p>
@@ -840,7 +875,27 @@ function MyPage() {
                           <span>{order.memo}</span>
                         </div>
                       )}
+                      {order.tracking_number && (
+                        <div className="flex gap-3 mt-1">
+                          <span className="text-gray-400 w-14 shrink-0">운송장</span>
+                          <span className="text-purple-700 font-medium">
+                            {order.tracking_carrier === 'cj' ? 'CJ대한통운' :
+                             order.tracking_carrier === 'hanjin' ? '한진택배' :
+                             order.tracking_carrier === 'lotte' ? '롯데택배' :
+                             order.tracking_carrier === 'logen' ? '로젠택배' :
+                             order.tracking_carrier === 'post' ? '우체국택배' :
+                             order.tracking_carrier || ''}
+                            {' '}{order.tracking_number}
+                          </span>
+                        </div>
+                      )}
                     </div>
+                    {order.return_reason && (
+                      <div className="flex gap-3 mt-1">
+                        <span className="text-gray-400 w-14 shrink-0">{t.mypage.returnReason}</span>
+                        <span className="text-orange-600">{order.return_reason}</span>
+                      </div>
+                    )}
                     {order.status === 'paid' && (
                       <div className="border-t border-gray-100 mt-3 pt-3">
                         <button
@@ -852,11 +907,61 @@ function MyPage() {
                         </button>
                       </div>
                     )}
+                    {order.status === 'delivered' && (
+                      <div className="border-t border-gray-100 mt-3 pt-3 flex gap-3">
+                        <button
+                          onClick={() => setReturnModal({ order, type: 'return' })}
+                          className="text-xs text-orange-600 hover:text-orange-800 transition-colors"
+                        >
+                          {t.mypage.requestReturn}
+                        </button>
+                        <button
+                          onClick={() => setReturnModal({ order, type: 'exchange' })}
+                          className="text-xs text-teal-600 hover:text-teal-800 transition-colors"
+                        >
+                          {t.mypage.requestExchange}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* 반품/교환 신청 모달 */}
+      {returnModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => { setReturnModal(null); setReturnReason('') }} />
+          <div className="relative bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 p-6">
+            <h3 className="text-lg font-bold mb-4">
+              {returnModal.type === 'return' ? t.mypage.requestReturn : t.mypage.requestExchange}
+            </h3>
+            <p className="text-sm text-gray-500 mb-3">{t.mypage.returnReasonLabel}</p>
+            <textarea
+              value={returnReason}
+              onChange={(e) => setReturnReason(e.target.value)}
+              placeholder={t.mypage.returnReasonPlaceholder}
+              className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm outline-none focus:border-gray-400 resize-none h-24"
+            />
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => { setReturnModal(null); setReturnReason('') }}
+                className="flex-1 px-4 py-2 border border-gray-200 text-sm rounded-md hover:bg-gray-50 transition-colors"
+              >
+                {t.common.cancel}
+              </button>
+              <button
+                onClick={handleReturnRequest}
+                disabled={submittingReturn || !returnReason.trim()}
+                className="flex-1 px-4 py-2 bg-black text-white text-sm rounded-md hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              >
+                {submittingReturn ? t.mypage.submittingReturn : t.mypage.submitReturn}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

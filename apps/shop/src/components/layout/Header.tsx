@@ -16,6 +16,7 @@ export function Header() {
   const { count: wishlistCount } = useWishlist()
   const { t, locale, setLocale } = useI18n()
   const { resolvedNavs } = rootApi.useLoaderData()
+  const headerNav = resolvedNavs.find((n) => n.slug === 'header')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -58,18 +59,16 @@ export function Header() {
             >
               {t.common.products}
             </Link>
-            {resolvedNavs.flatMap((nav) =>
-              nav.links.map((link) => (
-                <Link
-                  key={`${nav.slug}-${link.to}`}
-                  to={link.to}
-                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                  activeProps={{ className: 'text-sm text-gray-900 font-medium' }}
-                >
-                  {link.label}
-                </Link>
-              )),
-            )}
+            {headerNav?.links.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                activeProps={{ className: 'text-sm text-gray-900 font-medium' }}
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
         </div>
 

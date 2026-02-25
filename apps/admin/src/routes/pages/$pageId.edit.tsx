@@ -2,22 +2,24 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import { cb } from '@/lib/connectbase'
 import { PAGES_TABLE_ID } from '@/lib/constants'
-import { toPage } from '@/lib/utils'
+import { toPage, toPages } from '@/lib/utils'
 import { PageForm } from '@/components/pages/PageForm'
 import type { PageFormData } from '@/components/pages/PageForm'
 
 export const Route = createFileRoute('/pages/$pageId/edit')({
   loader: async ({ params }) => {
     const result = await cb.database.getData(PAGES_TABLE_ID, { limit: 1000 })
-    const row = (result.data ?? []).find((r: { id: string }) => r.id === params.pageId)
+    const rows = result.data ?? []
+    const row = rows.find((r: { id: string }) => r.id === params.pageId)
     if (!row) throw new Error('페이지를 찾을 수 없습니다.')
-    return { page: toPage(row) }
+    const slugs = toPages(rows).map((p) => p.slug)
+    return { page: toPage(row), existingSlugs: slugs }
   },
   component: EditPagePage,
 })
 
 function EditPagePage() {
-  const { page } = Route.useLoaderData()
+  const { page, existingSlugs } = Route.useLoaderData()
   const navigate = useNavigate()
 
   const handleSubmit = async (data: PageFormData) => {
@@ -38,7 +40,7 @@ function EditPagePage() {
         </Link>
         <h1 className="text-2xl font-bold">페이지 수정 — {page.title}</h1>
       </div>
-      <PageForm initial={page} onSubmit={handleSubmit} submitLabel="저장" />
+      <PageForm initial={page} onSubmit={handleSubmit} submitLabel="저장" existingSlugs={existingSlugs} />
     </div>
   )
 }

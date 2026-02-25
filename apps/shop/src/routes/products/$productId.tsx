@@ -1,13 +1,17 @@
+import { useEffect } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { cb } from '@/lib/connectbase'
 import { PRODUCTS_TABLE_ID } from '@/lib/constants'
 import { ProductImageGallery } from '@/components/product/ProductImageGallery'
 import { ProductInfo } from '@/components/product/ProductInfo'
 import { ProductReviews } from '@/components/product/ProductReviews'
+import { ProductQnA } from '@/components/product/ProductQnA'
+import { RecentProducts } from '@/components/product/RecentProducts'
 import { ProductCard } from '@/components/ui/ProductCard'
 import { toProduct, toProducts } from '@/lib/utils'
 import { useI18n } from '@/hooks/useI18n'
 import { getProductName } from '@/lib/i18n/getLocalizedField'
+import { addRecentProduct } from '@/hooks/useRecentProducts'
 
 export const Route = createFileRoute('/products/$productId')({
   component: ProductDetailPage,
@@ -31,6 +35,10 @@ function ProductDetailPage() {
   const { product, relatedProducts } = Route.useLoaderData()
   const { t, locale } = useI18n()
   const localizedName = getProductName(product, locale)
+
+  useEffect(() => {
+    addRecentProduct(product.id)
+  }, [product.id])
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
@@ -86,6 +94,16 @@ function ProductDetailPage() {
       {/* 리뷰 */}
       <div className="mt-16 border-t border-gray-100 pt-12 max-w-3xl mx-auto">
         <ProductReviews productId={product.id} />
+      </div>
+
+      {/* Q&A */}
+      <div className="mt-16 border-t border-gray-100 pt-12 max-w-3xl mx-auto">
+        <ProductQnA productId={product.id} />
+      </div>
+
+      {/* 최근 본 상품 */}
+      <div className="mt-16 border-t border-gray-100 pt-12 max-w-3xl mx-auto">
+        <RecentProducts excludeId={product.id} />
       </div>
 
       {/* 연관 상품 */}

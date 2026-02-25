@@ -77,6 +77,8 @@ const ko = {
     noSearchResults: '"{q}" 검색 결과가 없습니다',
     tryDifferentSearch: '다른 검색어를 입력해보세요',
     tryDifferentCategory: '다른 카테고리를 선택해보세요',
+    recentlyViewed: '최근 본 상품',
+    share: '공유',
   },
 
   // 리뷰
@@ -97,6 +99,7 @@ const ko = {
     reviewCount: '{count}개 리뷰',
     ratingLabel: '별점',
     ratingValue: '{rating}점',
+    addImage: '이미지 첨부',
   },
 
   // 장바구니
@@ -180,6 +183,8 @@ const ko = {
     mileageUse: '마일리지 사용',
     totalPayment: '총 결제 금액',
     earnEstimate: '구매 적립 예정: {amount}',
+    agreeTerms: '주문 내용을 확인하였으며, 이용약관 및 개인정보 수집·이용에 동의합니다.',
+    agreeRequired: '이용약관에 동의해주세요.',
   },
 
   // 결제 결과
@@ -279,6 +284,16 @@ const ko = {
     cancelling: '취소 처리 중...',
     cancelFailed: '주문 취소에 실패했습니다.',
     cancelConfirm: '주문을 취소하시겠습니까?',
+
+    // 반품/교환
+    requestReturn: '반품 신청',
+    requestExchange: '교환 신청',
+    returnReasonLabel: '사유를 입력해주세요',
+    returnReasonPlaceholder: '반품/교환 사유를 상세히 작성해주세요',
+    submitReturn: '신청하기',
+    submittingReturn: '신청 중...',
+    returnFailed: '신청에 실패했습니다.',
+    returnReason: '사유',
   },
 
   // 주문 상태
@@ -289,6 +304,10 @@ const ko = {
     delivered: '배송완료',
     cancelled: '취소',
     refunded: '환불',
+    return_requested: '반품신청',
+    return_completed: '반품완료',
+    exchange_requested: '교환신청',
+    exchange_completed: '교환완료',
   },
 
   // 쿠폰 수령 페이지
@@ -332,6 +351,43 @@ const ko = {
     customerService: '고객센터',
     businessInfo: '사업자 정보',
     copyright: '© 2024 Shop. All rights reserved.',
+  },
+
+  // Q&A
+  qna: {
+    title: '상품 문의',
+    writeQuestion: '문의 작성',
+    noQuestions: '등록된 문의가 없습니다',
+    beFirstQuestion: '첫 번째 문의를 작성해보세요!',
+    questionPlaceholder: '상품에 대해 궁금한 점을 작성해주세요...',
+    submit: '문의 등록',
+    loginRequired: '문의를 작성하려면 로그인이 필요합니다.',
+    contentRequired: '문의 내용을 입력해주세요.',
+    submitFailed: '문의 등록에 실패했습니다.',
+    deleteConfirm: '문의를 삭제하시겠습니까?',
+    answered: '답변완료',
+    waiting: '답변대기',
+    secret: '비밀글',
+    secretQuestion: '비밀 문의로 작성',
+    answer: '답변',
+    questionCount: '{count}개 문의',
+  },
+
+  // 프로모션
+  promotion: {
+    title: '타임세일',
+    ongoing: '진행중',
+    ended: '종료',
+    upcoming: '예정',
+    endsIn: '종료까지',
+    startsIn: '시작까지',
+    days: '일',
+    hours: '시간',
+    minutes: '분',
+    seconds: '초',
+    viewProducts: '상품 보기',
+    discountBadge: '{value}% OFF',
+    noPromotions: '진행중인 프로모션이 없습니다',
   },
 
   // 404

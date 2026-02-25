@@ -19,6 +19,7 @@ type MobileMenuProps = {
 
 export function MobileMenu({ open, onClose, user, onLogout, resolvedNavs }: MobileMenuProps) {
   const { t, locale, setLocale } = useI18n()
+  const headerNav = resolvedNavs.find((n) => n.slug === 'header')
 
   if (!open) return null
 
@@ -48,18 +49,16 @@ export function MobileMenu({ open, onClose, user, onLogout, resolvedNavs }: Mobi
           >
             {t.common.products}
           </Link>
-          {resolvedNavs.flatMap((nav) =>
-            nav.links.map((link) => (
-              <Link
-                key={`${nav.slug}-${link.to}`}
-                to={link.to}
-                className="text-lg text-gray-900 font-medium"
-                onClick={onClose}
-              >
-                {link.label}
-              </Link>
-            )),
-          )}
+          {headerNav?.links.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="text-lg text-gray-900 font-medium"
+              onClick={onClose}
+            >
+              {link.label}
+            </Link>
+          ))}
           <Link
             to="/cart"
             className="text-lg text-gray-900 font-medium"
