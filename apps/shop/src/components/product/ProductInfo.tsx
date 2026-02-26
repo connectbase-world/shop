@@ -8,6 +8,7 @@ import { useI18n } from '@/hooks/useI18n'
 import { getProductName, getProductDescription } from '@/lib/i18n/getLocalizedField'
 import { QuantitySelector } from '@/components/ui/QuantitySelector'
 import { ShareButtons } from '@/components/product/ShareButtons'
+import { trackAddToCart } from '@/lib/analytics'
 import type { Product, ProductVariant } from '@/lib/types'
 
 type ProductInfoProps = {
@@ -60,6 +61,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const handleAddToCart = () => {
     if (!canPurchase) return
     addItem(product, quantity, hasOptions ? selectedOptions : undefined)
+    trackAddToCart({ id: product.id, name: product.name, category: product.category, price: currentPrice }, quantity)
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }

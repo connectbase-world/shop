@@ -6,6 +6,7 @@ import { toQnAs } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useI18n } from '@/hooks/useI18n'
 import { Link } from '@tanstack/react-router'
+import { trackEvent } from '@/lib/analytics'
 import type { QnA } from '@/lib/types'
 
 type Props = {
@@ -68,6 +69,7 @@ export function ProductQnA({ productId }: Props) {
           answered_at: '',
         },
       })
+      trackEvent('qna_created', { product_id: productId })
       setContent('')
       setIsSecret(false)
       await loadQnAs()

@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { toProducts } from '@/lib/utils'
 import { useI18n } from '@/hooks/useI18n'
 import { getCategoryLabel } from '@/lib/i18n'
+import { trackSearch } from '@/lib/analytics'
 import { getProductName, getProductDescription } from '@/lib/i18n/getLocalizedField'
 
 type ProductSearch = {
@@ -97,6 +98,7 @@ function ProductListPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     const trimmed = searchInput.trim()
+    if (trimmed) trackSearch(trimmed)
     navigate({
       to: '/products',
       search: {

@@ -12,6 +12,7 @@ import { toProduct, toProducts } from '@/lib/utils'
 import { useI18n } from '@/hooks/useI18n'
 import { getProductName } from '@/lib/i18n/getLocalizedField'
 import { addRecentProduct } from '@/hooks/useRecentProducts'
+import { trackProductView } from '@/lib/analytics'
 
 export const Route = createFileRoute('/products/$productId')({
   component: ProductDetailPage,
@@ -38,6 +39,7 @@ function ProductDetailPage() {
 
   useEffect(() => {
     addRecentProduct(product.id)
+    trackProductView({ id: product.id, name: product.name, category: product.category })
   }, [product.id])
 
   return (

@@ -21,6 +21,19 @@ export const NAV_ITEMS_TABLE_ID = '585054ff-2c87-42c0-bf5a-dc42c0391bc3'
 export const QNA_TABLE_ID = '51c3cb5c-3c6b-408b-8307-e6c72a756a41'
 export const BANNERS_TABLE_ID = '343e1120-ca71-4449-9900-dfde2610c00d'
 export const PROMOTIONS_TABLE_ID = '0aa6b603-83d2-4805-bad2-c14abea95e2a'
+export const ANALYTICS_EVENTS_TABLE_ID = '45f8bbe0-3415-43ae-b990-05d943397ea7'
+export const ANALYTICS_DAILY_TABLE_ID = '22a49c03-fddd-4717-a546-6c13e2477471'
+export const TRACKING_CONFIG_TABLE_ID = '0da75524-e34c-4c5c-9370-1344c4472ac2'
+export const MARKETPLACE_CONFIG_TABLE_ID = '9437afd1-b511-4004-a16c-ffaff44a8bab'
+export const MARKETPLACE_CATEGORY_MAP_TABLE_ID = '41bd7683-d421-4bdd-9ba5-bb36dd459eb7'
+export const MARKETPLACE_SYNC_LOG_TABLE_ID = '6ddd255a-62c3-409f-9908-fdc5341ff2c1'
+export const NAVER_SYNC_FUNCTION_ID = '019c9a01-f70c-7445-b8bc-942a81463d53'
+export const COUPANG_SYNC_FUNCTION_ID = '019c9a02-6b76-732b-81a5-4640aea56925'
+
+export const MARKETPLACE_PLATFORMS = [
+  { key: 'naver' as const, label: '네이버 스마트스토어', color: '#03C75A' },
+  { key: 'coupang' as const, label: '쿠팡', color: '#E31937' },
+] as const
 
 export const SUPPORTED_LANGUAGES: { code: import('./types').SupportedLocale; label: string }[] = [
   { code: 'en', label: 'English' },

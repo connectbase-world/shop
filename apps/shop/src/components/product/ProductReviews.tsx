@@ -6,6 +6,7 @@ import { toReviews } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useI18n } from '@/hooks/useI18n'
 import { Link } from '@tanstack/react-router'
+import { trackEvent } from '@/lib/analytics'
 import type { Review } from '@/lib/types'
 
 type Props = {
@@ -125,6 +126,7 @@ export function ProductReviews({ productId }: Props) {
           created_at: new Date().toISOString(),
         },
       })
+      trackEvent('review_created', { product_id: productId, rating })
       setContent('')
       setRating(5)
       setReviewImages([])

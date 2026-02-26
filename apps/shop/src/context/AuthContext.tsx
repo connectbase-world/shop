@@ -2,6 +2,7 @@ import { createContext, useState, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { cb } from '@/lib/connectbase'
 import { MEMBERS_TABLE_ID } from '@/lib/constants'
+import { trackLogout } from '@/lib/analytics'
 
 type User = {
   memberId: string
@@ -70,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(async () => {
+    trackLogout()
     try {
       await cb.auth.signOut()
     } catch {

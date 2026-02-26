@@ -1,23 +1,25 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import {
   Package, AlertTriangle, ClipboardList, TrendingUp,
-  ArrowUpRight, ArrowDownRight, ShoppingCart, Eye,
+  ArrowUpRight, ArrowDownRight, ShoppingCart, Eye, Users,
 } from 'lucide-react'
 import { cb } from '@/lib/connectbase'
-import { PRODUCTS_TABLE_ID, ORDERS_TABLE_ID, CATEGORIES } from '@/lib/constants'
-import { toProducts, toOrders, formatPrice, formatDateTime } from '@/lib/utils'
-import type { Product, Order } from '@/lib/types'
+import { PRODUCTS_TABLE_ID, ORDERS_TABLE_ID, CATEGORIES, ANALYTICS_EVENTS_TABLE_ID } from '@/lib/constants'
+import { toProducts, toOrders, toAnalyticsEvents, formatPrice, formatDateTime } from '@/lib/utils'
+import type { Product, Order, AnalyticsEvent } from '@/lib/types'
 
 export const Route = createFileRoute('/')(
   {
     loader: async () => {
-      const [productsResult, ordersResult] = await Promise.all([
+      const [productsResult, ordersResult, eventsResult] = await Promise.all([
         cb.database.getData(PRODUCTS_TABLE_ID, { limit: 1000 }),
         cb.database.getData(ORDERS_TABLE_ID, { limit: 1000 }),
+        cb.database.getData(ANALYTICS_EVENTS_TABLE_ID, { limit: 1000 }).catch(() => ({ data: [] })),
       ])
       const products = toProducts(productsResult.data ?? [])
       const orders = toOrders(ordersResult.data ?? [])
-      return { products, orders }
+      const analyticsEvents = toAnalyticsEvents(eventsResult.data ?? [])
+      return { products, orders, analyticsEvents }
     },
     component: DashboardPage,
   },
@@ -190,7 +192,7 @@ function getStatusInfo(status: string) {
 // --- 메인 ---
 
 function DashboardPage() {
-  const { products, orders } = Route.useLoaderData()
+  const { products, orders, analyticsEvents } = Route.useLoaderData()
 
   const totalProducts = products.length
   const outOfStock = products.filter((p) => p.stock === 0).length
@@ -200,6 +202,23 @@ function DashboardPage() {
   // 오늘 vs 어제 비교
   const today = new Date().toISOString().slice(0, 10)
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+
+  // 오늘 방문자 (회원/비회원 구분) - visitor_id 없는 이벤트는 같은 member의 visitor에 합침
+  const todayEvents = analyticsEvents.filter((e) => e.created_at?.slice(0, 10) === today)
+  const memberToVisitor = new Map<string, string>()
+  for (const e of todayEvents) {
+    if (e.visitor_id && e.member_id) memberToVisitor.set(e.member_id, e.visitor_id)
+  }
+  const todayVisitorIds = new Set<string>()
+  const todayMemberVisitorIds = new Set<string>()
+  for (const e of todayEvents) {
+    const vid = e.visitor_id || (e.member_id && memberToVisitor.get(e.member_id)) || ''
+    if (!vid) continue
+    todayVisitorIds.add(vid)
+    if (e.member_id) todayMemberVisitorIds.add(vid)
+  }
+  const todayMemberCount = todayMemberVisitorIds.size
+  const todayGuestCount = todayVisitorIds.size - todayMemberCount
   const todayOrders = orders.filter((o) => o.created_at?.slice(0, 10) === today)
   const yesterdayOrders = orders.filter((o) => o.created_at?.slice(0, 10) === yesterday)
   const todayRevenue = todayOrders.reduce((s, o) => s + (o.amount || 0), 0)
@@ -252,6 +271,14 @@ function DashboardPage() {
       color: 'bg-blue-50 text-blue-600',
     },
     {
+      label: '오늘 방문자',
+      value: `${todayVisitorIds.size}명`,
+      sub: `회원 ${todayMemberCount}명 · 비회원 ${todayGuestCount}명`,
+      change: null,
+      icon: Users,
+      color: 'bg-indigo-50 text-indigo-600',
+    },
+    {
       label: '전체 상품',
       value: `${totalProducts}개`,
       sub: `품절 ${outOfStock}개`,
@@ -282,7 +309,7 @@ function DashboardPage() {
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         {stats.map((stat) => {
           const Icon = stat.icon
           return (

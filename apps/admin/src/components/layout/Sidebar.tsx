@@ -1,26 +1,102 @@
+import { useState } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
-import { LayoutDashboard, Package, ClipboardList, Users, Ticket, Megaphone, FileText, StickyNote, Navigation, Settings, LogOut, User, MessageCircleQuestion, Image, Zap } from 'lucide-react'
+import { LayoutDashboard, Package, ClipboardList, Users, Ticket, Megaphone, FileText, StickyNote, Navigation, Settings, LogOut, User, MessageCircleQuestion, Image, Zap, BarChart3, Store, ChevronDown } from 'lucide-react'
 import { getAdminSession } from '@/lib/adminAuth'
+import type { LucideIcon } from 'lucide-react'
 
-const navItems = [
+type NavItem = { to: string; label: string; icon: LucideIcon }
+type NavGroup = { label: string; items: NavItem[] }
+
+const navGroups: (NavItem | NavGroup)[] = [
   { to: '/', label: '대시보드', icon: LayoutDashboard },
-  { to: '/products', label: '상품 관리', icon: Package },
-  { to: '/orders', label: '주문 관리', icon: ClipboardList },
-  { to: '/members', label: '회원 관리', icon: Users },
-  { to: '/coupons', label: '쿠폰 관리', icon: Ticket },
-  { to: '/influencers', label: '인플루언서', icon: Megaphone },
-  { to: '/qna', label: 'Q&A', icon: MessageCircleQuestion },
-  { to: '/banners', label: '배너', icon: Image },
-  { to: '/promotions', label: '프로모션', icon: Zap },
-  { to: '/boards', label: '게시판', icon: FileText },
-  { to: '/pages', label: '페이지', icon: StickyNote },
-  { to: '/navigations', label: '네비게이션', icon: Navigation },
-] as const
+  {
+    label: '쇼핑몰',
+    items: [
+      { to: '/products', label: '상품 관리', icon: Package },
+      { to: '/orders', label: '주문 관리', icon: ClipboardList },
+      { to: '/marketplace', label: '마켓플레이스', icon: Store },
+    ],
+  },
+  {
+    label: '고객',
+    items: [
+      { to: '/members', label: '회원 관리', icon: Users },
+      { to: '/qna', label: 'Q&A', icon: MessageCircleQuestion },
+      { to: '/influencers', label: '인플루언서', icon: Megaphone },
+    ],
+  },
+  {
+    label: '마케팅',
+    items: [
+      { to: '/coupons', label: '쿠폰 관리', icon: Ticket },
+      { to: '/banners', label: '배너', icon: Image },
+      { to: '/promotions', label: '프로모션', icon: Zap },
+    ],
+  },
+  {
+    label: '콘텐츠',
+    items: [
+      { to: '/boards', label: '게시판', icon: FileText },
+      { to: '/pages', label: '페이지', icon: StickyNote },
+      { to: '/navigations', label: '네비게이션', icon: Navigation },
+    ],
+  },
+  {
+    label: '분석',
+    items: [
+      { to: '/analytics', label: '애널리틱스', icon: BarChart3 },
+    ],
+  },
+]
+
+function isGroup(item: NavItem | NavGroup): item is NavGroup {
+  return 'items' in item
+}
+
+function getInitialOpenGroups(currentPath: string): Record<string, boolean> {
+  const open: Record<string, boolean> = {}
+  for (const entry of navGroups) {
+    if (isGroup(entry)) {
+      const hasActive = entry.items.some((item) => currentPath.startsWith(item.to))
+      open[entry.label] = hasActive
+    }
+  }
+  return open
+}
 
 export function Sidebar({ onLogout, onNavigate }: { onLogout?: () => void; onNavigate?: () => void }) {
   const { location } = useRouterState()
   const currentPath = location.pathname
   const session = getAdminSession()
+  const [openGroups, setOpenGroups] = useState(() => getInitialOpenGroups(currentPath))
+
+  const toggleGroup = (label: string) => {
+    setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }))
+  }
+
+  const renderNavLink = (item: NavItem) => {
+    const isActive =
+      item.to === '/'
+        ? currentPath === '/'
+        : currentPath.startsWith(item.to)
+    const Icon = item.icon
+
+    return (
+      <Link
+        key={item.to}
+        to={item.to}
+        onClick={onNavigate}
+        className={`flex items-center gap-3 px-3 py-2 rounded-md text-[13px] transition-colors ${
+          isActive
+            ? 'bg-gray-900 text-white'
+            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+        }`}
+      >
+        <Icon className="w-4 h-4" />
+        {item.label}
+      </Link>
+    )
+  }
 
   return (
     <aside className="fixed left-0 top-0 h-full w-60 bg-white border-r border-gray-200 flex flex-col z-50">
@@ -28,28 +104,40 @@ export function Sidebar({ onLogout, onNavigate }: { onLogout?: () => void; onNav
         <h1 className="text-lg font-bold tracking-tight">Shop Admin</h1>
       </div>
 
-      <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
-        {navItems.map((item) => {
-          const isActive =
-            item.to === '/'
-              ? currentPath === '/'
-              : currentPath.startsWith(item.to)
-          const Icon = item.icon
+      <nav className="flex-1 px-3 py-3 overflow-y-auto flex flex-col gap-0.5">
+        {navGroups.map((entry) => {
+          if (!isGroup(entry)) {
+            return renderNavLink(entry)
+          }
+
+          const isOpen = openGroups[entry.label] ?? false
+          const hasActive = entry.items.some((item) => currentPath.startsWith(item.to))
 
           return (
-            <Link
-              key={item.to}
-              to={item.to}
-              onClick={onNavigate}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
-                isActive
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {item.label}
-            </Link>
+            <div key={entry.label} className="mt-1">
+              <button
+                onClick={() => toggleGroup(entry.label)}
+                className={`flex items-center justify-between w-full px-3 py-2 rounded-md text-[13px] transition-colors ${
+                  hasActive && !isOpen
+                    ? 'text-gray-900 font-medium'
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                }`}
+              >
+                <span className="text-[11px] font-semibold uppercase tracking-wider">{entry.label}</span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              <div
+                className={`overflow-hidden transition-all duration-200 ${
+                  isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                }`}
+              >
+                <div className="flex flex-col gap-0.5 pl-1 mt-0.5">
+                  {entry.items.map(renderNavLink)}
+                </div>
+              </div>
+            </div>
           )
         })}
       </nav>
@@ -71,7 +159,7 @@ export function Sidebar({ onLogout, onNavigate }: { onLogout?: () => void; onNav
         <Link
           to="/settings"
           onClick={onNavigate}
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm w-full transition-colors ${
+          className={`flex items-center gap-3 px-3 py-2 rounded-md text-[13px] w-full transition-colors ${
             currentPath.startsWith('/settings')
               ? 'bg-gray-900 text-white'
               : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -83,7 +171,7 @@ export function Sidebar({ onLogout, onNavigate }: { onLogout?: () => void; onNav
         {onLogout && (
           <button
             onClick={onLogout}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm w-full transition-colors text-gray-600 hover:bg-red-50 hover:text-red-600"
+            className="flex items-center gap-3 px-3 py-2 rounded-md text-[13px] w-full transition-colors text-gray-600 hover:bg-red-50 hover:text-red-600"
           >
             <LogOut className="w-4 h-4" />
             로그아웃

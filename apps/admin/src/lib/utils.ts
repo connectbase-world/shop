@@ -1,4 +1,4 @@
-import type { Product, Order, Profile, Review, MemberRow, Coupon, UserCoupon, MileageHistory, Influencer, Commission, Post, Board, Page, Navigation, NavItem, QnA, Banner, Promotion } from './types'
+import type { Product, Order, Profile, Review, MemberRow, Coupon, UserCoupon, MileageHistory, Influencer, Commission, Post, Board, Page, Navigation, NavItem, QnA, Banner, Promotion, AnalyticsEvent, AnalyticsDaily, TrackingConfig, MarketplaceConfig, MarketplaceCategoryMap, MarketplaceSyncLog } from './types'
 
 export function formatPrice(price: number): string {
   return price.toLocaleString('ko-KR') + '원'
@@ -162,6 +162,50 @@ export function toPromotion(row: { id: string; data: Record<string, unknown> }):
 
 export function toPromotions(rows: { id: string; data: Record<string, unknown> }[]): Promotion[] {
   return rows.map(toPromotion)
+}
+
+export function toAnalyticsEvent(row: { id: string; data: Record<string, unknown> }): AnalyticsEvent {
+  return { id: row.id, ...row.data } as AnalyticsEvent
+}
+
+export function toAnalyticsEvents(rows: { id: string; data: Record<string, unknown> }[]): AnalyticsEvent[] {
+  return rows.map(toAnalyticsEvent)
+}
+
+export function toAnalyticsDaily(row: { id: string; data: Record<string, unknown> }): AnalyticsDaily {
+  return { id: row.id, ...row.data } as AnalyticsDaily
+}
+
+export function toAnalyticsDailies(rows: { id: string; data: Record<string, unknown> }[]): AnalyticsDaily[] {
+  return rows.map(toAnalyticsDaily)
+}
+
+export function toTrackingConfig(row: { id: string; data: Record<string, unknown> }): TrackingConfig {
+  return { id: row.id, ...row.data } as TrackingConfig
+}
+
+export function toMarketplaceConfig(row: { id: string; data: Record<string, unknown> }): MarketplaceConfig {
+  return { id: row.id, ...row.data } as MarketplaceConfig
+}
+
+export function toMarketplaceConfigs(rows: { id: string; data: Record<string, unknown> }[]): MarketplaceConfig[] {
+  return rows.map(toMarketplaceConfig)
+}
+
+export function toMarketplaceCategoryMap(row: { id: string; data: Record<string, unknown> }): MarketplaceCategoryMap {
+  return { id: row.id, ...row.data } as MarketplaceCategoryMap
+}
+
+export function toMarketplaceCategoryMaps(rows: { id: string; data: Record<string, unknown> }[]): MarketplaceCategoryMap[] {
+  return rows.map(toMarketplaceCategoryMap)
+}
+
+export function toMarketplaceSyncLog(row: { id: string; data: Record<string, unknown> }): MarketplaceSyncLog {
+  return { id: row.id, ...row.data } as MarketplaceSyncLog
+}
+
+export function toMarketplaceSyncLogs(rows: { id: string; data: Record<string, unknown> }[]): MarketplaceSyncLog[] {
+  return rows.map(toMarketplaceSyncLog)
 }
 
 export function formatDate(dateStr: string): string {

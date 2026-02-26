@@ -18,10 +18,12 @@ import { Route as PagesIndexRouteImport } from './routes/pages/index'
 import { Route as OrdersIndexRouteImport } from './routes/orders/index'
 import { Route as NavigationsIndexRouteImport } from './routes/navigations/index'
 import { Route as MembersIndexRouteImport } from './routes/members/index'
+import { Route as MarketplaceIndexRouteImport } from './routes/marketplace/index'
 import { Route as InfluencersIndexRouteImport } from './routes/influencers/index'
 import { Route as CouponsIndexRouteImport } from './routes/coupons/index'
 import { Route as BoardsIndexRouteImport } from './routes/boards/index'
 import { Route as BannersIndexRouteImport } from './routes/banners/index'
+import { Route as AnalyticsIndexRouteImport } from './routes/analytics/index'
 import { Route as PromotionsNewRouteImport } from './routes/promotions/new'
 import { Route as ProductsNewRouteImport } from './routes/products/new'
 import { Route as PagesNewRouteImport } from './routes/pages/new'
@@ -30,6 +32,7 @@ import { Route as CouponsNewRouteImport } from './routes/coupons/new'
 import { Route as BoardsNewRouteImport } from './routes/boards/new'
 import { Route as BannersNewRouteImport } from './routes/banners/new'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as AnalyticsJourneysRouteImport } from './routes/analytics/journeys'
 import { Route as BoardsBoardIdIndexRouteImport } from './routes/boards/$boardId/index'
 import { Route as PromotionsPromotionIdEditRouteImport } from './routes/promotions/$promotionId.edit'
 import { Route as ProductsProductIdEditRouteImport } from './routes/products/$productId.edit'
@@ -85,6 +88,11 @@ const MembersIndexRoute = MembersIndexRouteImport.update({
   path: '/members/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MarketplaceIndexRoute = MarketplaceIndexRouteImport.update({
+  id: '/marketplace/',
+  path: '/marketplace/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InfluencersIndexRoute = InfluencersIndexRouteImport.update({
   id: '/influencers/',
   path: '/influencers/',
@@ -103,6 +111,11 @@ const BoardsIndexRoute = BoardsIndexRouteImport.update({
 const BannersIndexRoute = BannersIndexRouteImport.update({
   id: '/banners/',
   path: '/banners/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsIndexRoute = AnalyticsIndexRouteImport.update({
+  id: '/analytics/',
+  path: '/analytics/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PromotionsNewRoute = PromotionsNewRouteImport.update({
@@ -143,6 +156,11 @@ const BannersNewRoute = BannersNewRouteImport.update({
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsJourneysRoute = AnalyticsJourneysRouteImport.update({
+  id: '/analytics/journeys',
+  path: '/analytics/journeys',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BoardsBoardIdIndexRoute = BoardsBoardIdIndexRouteImport.update({
@@ -195,6 +213,7 @@ const BoardsBoardIdPostsPostIdEditRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/analytics/journeys': typeof AnalyticsJourneysRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/banners/new': typeof BannersNewRoute
   '/boards/new': typeof BoardsNewRoute
@@ -203,10 +222,12 @@ export interface FileRoutesByFullPath {
   '/pages/new': typeof PagesNewRoute
   '/products/new': typeof ProductsNewRoute
   '/promotions/new': typeof PromotionsNewRoute
+  '/analytics/': typeof AnalyticsIndexRoute
   '/banners/': typeof BannersIndexRoute
   '/boards/': typeof BoardsIndexRoute
   '/coupons/': typeof CouponsIndexRoute
   '/influencers/': typeof InfluencersIndexRoute
+  '/marketplace/': typeof MarketplaceIndexRoute
   '/members/': typeof MembersIndexRoute
   '/navigations/': typeof NavigationsIndexRoute
   '/orders/': typeof OrdersIndexRoute
@@ -227,6 +248,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analytics/journeys': typeof AnalyticsJourneysRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/banners/new': typeof BannersNewRoute
   '/boards/new': typeof BoardsNewRoute
@@ -235,10 +257,12 @@ export interface FileRoutesByTo {
   '/pages/new': typeof PagesNewRoute
   '/products/new': typeof ProductsNewRoute
   '/promotions/new': typeof PromotionsNewRoute
+  '/analytics': typeof AnalyticsIndexRoute
   '/banners': typeof BannersIndexRoute
   '/boards': typeof BoardsIndexRoute
   '/coupons': typeof CouponsIndexRoute
   '/influencers': typeof InfluencersIndexRoute
+  '/marketplace': typeof MarketplaceIndexRoute
   '/members': typeof MembersIndexRoute
   '/navigations': typeof NavigationsIndexRoute
   '/orders': typeof OrdersIndexRoute
@@ -260,6 +284,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/analytics/journeys': typeof AnalyticsJourneysRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/banners/new': typeof BannersNewRoute
   '/boards/new': typeof BoardsNewRoute
@@ -268,10 +293,12 @@ export interface FileRoutesById {
   '/pages/new': typeof PagesNewRoute
   '/products/new': typeof ProductsNewRoute
   '/promotions/new': typeof PromotionsNewRoute
+  '/analytics/': typeof AnalyticsIndexRoute
   '/banners/': typeof BannersIndexRoute
   '/boards/': typeof BoardsIndexRoute
   '/coupons/': typeof CouponsIndexRoute
   '/influencers/': typeof InfluencersIndexRoute
+  '/marketplace/': typeof MarketplaceIndexRoute
   '/members/': typeof MembersIndexRoute
   '/navigations/': typeof NavigationsIndexRoute
   '/orders/': typeof OrdersIndexRoute
@@ -294,6 +321,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/analytics/journeys'
     | '/auth/callback'
     | '/banners/new'
     | '/boards/new'
@@ -302,10 +330,12 @@ export interface FileRouteTypes {
     | '/pages/new'
     | '/products/new'
     | '/promotions/new'
+    | '/analytics/'
     | '/banners/'
     | '/boards/'
     | '/coupons/'
     | '/influencers/'
+    | '/marketplace/'
     | '/members/'
     | '/navigations/'
     | '/orders/'
@@ -326,6 +356,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/analytics/journeys'
     | '/auth/callback'
     | '/banners/new'
     | '/boards/new'
@@ -334,10 +365,12 @@ export interface FileRouteTypes {
     | '/pages/new'
     | '/products/new'
     | '/promotions/new'
+    | '/analytics'
     | '/banners'
     | '/boards'
     | '/coupons'
     | '/influencers'
+    | '/marketplace'
     | '/members'
     | '/navigations'
     | '/orders'
@@ -358,6 +391,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/analytics/journeys'
     | '/auth/callback'
     | '/banners/new'
     | '/boards/new'
@@ -366,10 +400,12 @@ export interface FileRouteTypes {
     | '/pages/new'
     | '/products/new'
     | '/promotions/new'
+    | '/analytics/'
     | '/banners/'
     | '/boards/'
     | '/coupons/'
     | '/influencers/'
+    | '/marketplace/'
     | '/members/'
     | '/navigations/'
     | '/orders/'
@@ -391,6 +427,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnalyticsJourneysRoute: typeof AnalyticsJourneysRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   BannersNewRoute: typeof BannersNewRoute
   BoardsNewRoute: typeof BoardsNewRoute
@@ -399,10 +436,12 @@ export interface RootRouteChildren {
   PagesNewRoute: typeof PagesNewRoute
   ProductsNewRoute: typeof ProductsNewRoute
   PromotionsNewRoute: typeof PromotionsNewRoute
+  AnalyticsIndexRoute: typeof AnalyticsIndexRoute
   BannersIndexRoute: typeof BannersIndexRoute
   BoardsIndexRoute: typeof BoardsIndexRoute
   CouponsIndexRoute: typeof CouponsIndexRoute
   InfluencersIndexRoute: typeof InfluencersIndexRoute
+  MarketplaceIndexRoute: typeof MarketplaceIndexRoute
   MembersIndexRoute: typeof MembersIndexRoute
   NavigationsIndexRoute: typeof NavigationsIndexRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
@@ -487,6 +526,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MembersIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/marketplace/': {
+      id: '/marketplace/'
+      path: '/marketplace'
+      fullPath: '/marketplace/'
+      preLoaderRoute: typeof MarketplaceIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/influencers/': {
       id: '/influencers/'
       path: '/influencers'
@@ -513,6 +559,13 @@ declare module '@tanstack/react-router' {
       path: '/banners'
       fullPath: '/banners/'
       preLoaderRoute: typeof BannersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics/': {
+      id: '/analytics/'
+      path: '/analytics'
+      fullPath: '/analytics/'
+      preLoaderRoute: typeof AnalyticsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/promotions/new': {
@@ -569,6 +622,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/callback'
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics/journeys': {
+      id: '/analytics/journeys'
+      path: '/analytics/journeys'
+      fullPath: '/analytics/journeys'
+      preLoaderRoute: typeof AnalyticsJourneysRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/boards/$boardId/': {
@@ -639,6 +699,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnalyticsJourneysRoute: AnalyticsJourneysRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   BannersNewRoute: BannersNewRoute,
   BoardsNewRoute: BoardsNewRoute,
@@ -647,10 +708,12 @@ const rootRouteChildren: RootRouteChildren = {
   PagesNewRoute: PagesNewRoute,
   ProductsNewRoute: ProductsNewRoute,
   PromotionsNewRoute: PromotionsNewRoute,
+  AnalyticsIndexRoute: AnalyticsIndexRoute,
   BannersIndexRoute: BannersIndexRoute,
   BoardsIndexRoute: BoardsIndexRoute,
   CouponsIndexRoute: CouponsIndexRoute,
   InfluencersIndexRoute: InfluencersIndexRoute,
+  MarketplaceIndexRoute: MarketplaceIndexRoute,
   MembersIndexRoute: MembersIndexRoute,
   NavigationsIndexRoute: NavigationsIndexRoute,
   OrdersIndexRoute: OrdersIndexRoute,

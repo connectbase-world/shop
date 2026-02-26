@@ -6,6 +6,7 @@ import { toCoupons, toMileageHistories, getMileageBalance, toInfluencers, toProd
 import { useCart } from '@/hooks/useCart'
 import { useI18n } from '@/hooks/useI18n'
 import { CheckCircle, AlertCircle } from 'lucide-react'
+import { trackPurchase } from '@/lib/analytics'
 
 type PaymentSearch = {
   paymentKey?: string
@@ -104,6 +105,9 @@ function PaymentSuccessPage() {
                 coupon_discount: order.couponDiscount || 0,
               },
             })
+
+            // 애널리틱스 구매 이벤트
+            trackPurchase(orderId, amount, order.items || [])
 
             // 재고 차감
             try {

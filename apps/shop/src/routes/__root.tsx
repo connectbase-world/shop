@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Outlet, createRootRoute, ErrorComponent, Link } from '@tanstack/react-router'
+import { useEffect, useRef } from 'react'
+import { Outlet, createRootRoute, ErrorComponent, Link, useRouterState } from '@tanstack/react-router'
 import { AlertTriangle } from 'lucide-react'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -11,9 +11,11 @@ import ko from '@/lib/i18n/ko'
 import en from '@/lib/i18n/en'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { initAnalytics, trackPageView } from '@/lib/analytics'
 import { cb } from '@/lib/connectbase'
-import { BOARDS_TABLE_ID, PAGES_TABLE_ID, PRODUCTS_TABLE_ID, NAVIGATIONS_TABLE_ID, NAV_ITEMS_TABLE_ID } from '@/lib/constants'
+import { BOARDS_TABLE_ID, PAGES_TABLE_ID, PRODUCTS_TABLE_ID, NAVIGATIONS_TABLE_ID, NAV_ITEMS_TABLE_ID, TRACKING_CONFIG_TABLE_ID } from '@/lib/constants'
 import { toBoards, toPages, toProducts, toNavigations, toNavItems } from '@/lib/utils'
+import { injectTrackingScripts, type TrackingConfig } from '@/lib/tracking'
 
 function getT() {
   const locale = (typeof localStorage !== 'undefined' && localStorage.getItem('shop_locale')) || 'ko'
@@ -24,12 +26,13 @@ import '../styles.css'
 
 export const Route = createRootRoute({
   loader: async () => {
-    const [boardsRes, pagesRes, productsRes, navsRes, navItemsRes] = await Promise.all([
+    const [boardsRes, pagesRes, productsRes, navsRes, navItemsRes, trackingRes] = await Promise.all([
       cb.database.getData(BOARDS_TABLE_ID, { limit: 1000 }),
       cb.database.getData(PAGES_TABLE_ID, { limit: 1000 }),
       cb.database.getData(PRODUCTS_TABLE_ID, { limit: 1000 }),
       cb.database.getData(NAVIGATIONS_TABLE_ID, { limit: 1000 }),
       cb.database.getData(NAV_ITEMS_TABLE_ID, { limit: 1000 }),
+      cb.database.getData(TRACKING_CONFIG_TABLE_ID, { limit: 1 }).catch(() => ({ data: [] })),
     ])
     const boards = toBoards(boardsRes.data ?? [])
     const pages = toPages(pagesRes.data ?? [])
@@ -61,7 +64,12 @@ export const Route = createRootRoute({
       return { slug: nav.slug, name: nav.name, links }
     })
 
-    return { resolvedNavs }
+    const trackingRows = trackingRes.data ?? []
+    const trackingConfig = trackingRows.length > 0
+      ? (trackingRows[0].data as TrackingConfig)
+      : null
+
+    return { resolvedNavs, trackingConfig }
   },
   component: RootComponent,
   notFoundComponent: NotFoundPage,
@@ -103,6 +111,22 @@ function ErrorBoundary({ error }: { error: Error }) {
 }
 
 function RootComponent() {
+  const { location } = useRouterState()
+  const { trackingConfig } = Route.useLoaderData()
+  const prevPath = useRef('')
+
+  useEffect(() => {
+    initAnalytics()
+    if (trackingConfig) injectTrackingScripts(trackingConfig)
+  }, [])
+
+  useEffect(() => {
+    if (location.pathname !== prevPath.current) {
+      prevPath.current = location.pathname
+      trackPageView(location.pathname)
+    }
+  }, [location.pathname])
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const ref = params.get('ref')

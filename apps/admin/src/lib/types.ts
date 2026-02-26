@@ -279,6 +279,85 @@ export type Promotion = {
   created_at: string
 }
 
+export type AnalyticsEvent = {
+  id: string
+  event_type: string
+  page_path: string
+  product_id: string
+  product_name: string
+  product_category: string
+  event_data: Record<string, unknown>
+  visitor_id: string
+  member_id: string
+  session_id: string
+  created_at: string
+}
+
+export type AnalyticsDaily = {
+  id: string
+  date: string
+  page_views: number
+  unique_visitors: number
+  product_views: number
+  add_to_carts: number
+  purchases: number
+  revenue: number
+  top_products: { id: string; name: string; views: number }[]
+}
+
+export type TrackingConfig = {
+  id: string
+  gtm_id: string
+  ga4_id: string
+  meta_pixel_id: string
+  naver_analytics_id: string
+  kakao_pixel_id: string
+  gtm_enabled: boolean
+  ga4_enabled: boolean
+  meta_pixel_enabled: boolean
+  naver_analytics_enabled: boolean
+  kakao_pixel_enabled: boolean
+  custom_head_scripts: string
+  custom_body_scripts: string
+  updated_at: string
+}
+
+export type MarketplacePlatform = 'naver' | 'coupang'
+
+export type MarketplaceConfig = {
+  id: string
+  platform: MarketplacePlatform
+  is_enabled: boolean
+  client_id: string
+  client_secret: string
+  secret_key: string
+  shop_name: string
+  last_verified_at: string
+  updated_at: string
+}
+
+export type MarketplaceCategoryMap = {
+  id: string
+  internal_category: string
+  platform: MarketplacePlatform
+  external_category_id: string
+  external_category_name: string
+  external_category_path: string
+  updated_at: string
+}
+
+export type MarketplaceSyncLog = {
+  id: string
+  product_id: string
+  platform: MarketplacePlatform
+  status: 'pending' | 'syncing' | 'synced' | 'failed'
+  external_product_id: string
+  external_product_url: string
+  error_message: string
+  synced_at: string
+  updated_at: string
+}
+
 export type Member = {
   memberId: string
   nickname: string

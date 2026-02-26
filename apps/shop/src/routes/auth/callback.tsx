@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { cb } from '@/lib/connectbase'
 import { registerMember } from '@/lib/registerMember'
+import { trackLogin } from '@/lib/analytics'
 
 export const Route = createFileRoute('/auth/callback')({
   component: AuthCallbackPage,
@@ -26,6 +27,7 @@ function AuthCallbackPage() {
             }),
           )
           await registerMember(result.member_id, result.nickname || '', result.provider || '')
+          trackLogin(result.member_id, result.nickname || '')
           window.location.href = '/'
         }
       } else {
